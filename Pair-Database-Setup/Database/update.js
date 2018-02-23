@@ -1,5 +1,13 @@
-	
-	/*
+module.exports = {
+	getSnapshot,
+	updateCompany,
+	updateEmployee,
+	updateIntern,
+	updatePassword,
+	removeIntern
+}
+
+		/*
     / @brief this function retrieves the already existent
     /        items from a list and adds the new ones to it
     /        can be used to update lists and arrays
@@ -9,6 +17,7 @@
     / @param itemName the item you want to update
     / @param newValue the values you want to add
     */
+
     function getSnapshot(relevantRef, childName, itemName, newValue) {
       var ref = relevantRef.child(childName).child(itemName);
       var oldlist = [];
@@ -34,10 +43,12 @@
 	  		employeeRef.child(id).update({
 	  			"firstName": firstName
 	  		});
-	    if(lastName != null)
+
+	   	if(lastName != null)
 	  		employeeRef.child(id).update({
 	  			"lastName": lastName
 	  		});
+
 	  	if(description != null)
 	  		employeeRef.child(id).update({
 	  			"description": description
@@ -58,7 +69,7 @@
 	  		employeeRef.child(id).child("links").update({
 	  			"1": linkedin
 	  		});
-    }
+		}
 
     function updateIntern(internRef, ID, firstName, lastName, phone) {
       if(firstName != null) {
