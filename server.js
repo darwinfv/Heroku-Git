@@ -37,28 +37,68 @@ var companyRef = db.ref("/Company");
 var internRef = db.ref("/User/Interns");
 var employeeRef = db.ref("/User/Employees");
 
+
+function test2() {
+
+}
+//test-function
 function test() {
-  create.createCompany(companyRef, 'GOGGLE', listOfLocations = "novalue", listOfEmployees = "novalue");
-  create.createIntern(internRef, 'Hiten', 'Rathod', 'HIHELLO123', 'hitenrathod98@gmail.com', 'Purdue');
-  var test = ref.child("NEW_HITEN");
-  test.set({
-    Hiten: {
-      date_of_birth: "May 30, 1998",
-      full_name: "Hiten Rathod"
-    },
-    Darwin: {
-      date_of_birth: "Jan 11, 1999",
-      full_name: "Darwin Vaz"
-    }
+  //create an intern
+  create.createIntern(internRef, "1" + UID("darwin@gmail.com"), "darwin@gmail.com", "Goggle", "San Fran");
+
+  //create a basic password
+  var pass_shasum = encrypt("something");//crypto.createHash('sha256').update("vaz").digest('hex');
+
+  //create psuedo preferences
+  create.createBasicPreferences(internRef,"1" + UID("darwin@gmail.com"), "Darwin", "Vaz", "yeah, cool description", "dv@fb.com", "dv@t.com", "dv@linked.in");
+
+  //create basic employee
+  create.createEmployee(employeeRef, companyRef,"2" + UID("hiten@gmail.com"), "hiten", "rathod", pass_shasum, "hiten@gmail.com", "Goggle", "San Fran", "bio, gotta be fast like Sanic", "hiten@fb.com", "hiten@linkedin.com", "hiten@twit.com");
+
+  //create a psuedo intern
+  create.createIntern(internRef, "1" + UID("arvindh@gmail.com"), "arvindh@gmail.com", "Carrot", "novalue");
+
+  //create basic preferences for a different intern
+  create.createBasicPreferences(internRef,"1" + UID("arvindh@gmail.com"), "ED", "Bob", "not yeah", "asv@fb.com", "asv@t.com", "asv@linkedin.com");
+
+  //create password for arvindh
+  create.createPassword(internRef, "1" + UID("arvindh@gmail.com"), pass_shasum);
+
+  //create possword for darwin:
+  create.createPassword(internRef, "1" + UID("darwin@gmail.com"), pass_shasum);
+
+  console.log('reading preferences for:');
+  console.log("1" + UID("darwin@gmail.com"));
+  console.log('basic preferences:');
+  read.getBasicPreferences(internRef, "1" + UID("darwin@gmail.com"), (x) => {
+    console.log('Printing out prefs');
+    console.log(x);
   });
+  console.log('reading company: pin 3135');
+  read.getCompany(companyRef, "3135", (x) =>{
+    console.log('Printing out company name');
+    var name = x[0];
+    console.log(name);
+    var location = x.splice(1);
+    console.log('Printing names');
+    console.log(location);
+  });
+
 }
 
+//encrypt password
+function encrypt(password) {
+  cipher = password;
+  return cipher;
+}
+
+//create UID
 function UID(username) {
   var uid = 0;
   for (i = 0; i < username.length; i++) {
     var char = username.charCodeAt(i);
     //52 chars (lower and upper letters + 10 digits)
-    uid = (uid * 281) % 65 + char;
+    uid = (uid * 941) % 742 + char;
   }
   return (String(uid));
 }
@@ -74,7 +114,7 @@ app.post('/LOGIN', function (req, res) {
   //verify the values:
   //send UID and ENCRYPTED PASSWORD to verify
   //create ENCRYPTED PASSWORD
-  var pass_shasum = req.body.password;//crypto.createHash('sha256').update(req.body.password).digest('hex');
+  var pass_shasum = encrypt(req.body.password);//crypto.createHash('sha256').update(req.body.password).digest('hex');
 
   //print things out
   console.log("ENCRYPTED PASSWORD");
@@ -133,8 +173,8 @@ app.post('/SET-INTERN-PASSWORD', function (req, res) {
 
   //create intern uid
   var intern_uid = "1" + uid;
-  var pass = req.body.password;
-  create.createPassword(internRef, intern_uid, req.body.password);
+  var pass = encrypt(req.body.password);
+  create.createPassword(internRef, intern_uid, pass);
   res.json({
     "status": true
   });
@@ -152,8 +192,8 @@ app.post('/FORGOT-INTERN-PASSWORD', function (req, res) {
 
   //create intern uid
   var intern_uid = "1" + uid;
-  var pass = req.body.newPassword;
-  create.createPassword(internRef, intern_uid, req.body.newPassword);
+  var pass = encrypt(req.body.newPassword);
+  create.createPassword(internRef, intern_uid, pass);
   res.json({
     "status": true
   });
@@ -170,18 +210,18 @@ app.post('/RESET-PASSWORD', function (req, res) {
   console.log(uid);
 
   //password
-  var pass = req.body.newPassword;
+  var pass = encrypt(req.body.newPassword);
 
   if(uid.charAt(0) == '1')
   {
-    create.createPassword(internRef, uid, req.body.newPassword);
+    create.createPassword(internRef, uid, pass);
     res.json({
       "status": true
     });
   }
   else if(uid.charAt(0) == '2')
   {
-    create.createPassword(employeeRef, uid, req.body.newPassword);
+    create.createPassword(employeeRef, uid, pass);
     res.json({
       "status": true
     });
@@ -205,8 +245,8 @@ app.post('/SET-EMPLOYEE-PASSWORD', function (req, res) {
 
   //create intern uid
   var employee_uid = "2" + uid;
-  var pass = req.body.password;
-  create.createPassword(employeeRef, employee_uid, req.body.password);
+  var pass = encrypt(req.body.password);
+  create.createPassword(employeeRef, employee_uid, pass);
   res.json({
     "status": true
   });
@@ -248,10 +288,16 @@ app.post('/GET-COMPANY', function (req, res) {
   console.log(pin);
 
   read.getCompany(companyRef, pin, (x) => {
-    if (x != null)
-      res.json({
+    if (x != null) {
+        console.log(x[0]);
+        var y = x.splice(1);
+        console.log(y);
+        res.json({
+        "company": x[0],
+        "location": y,
         "status": true
-      });
+        });
+    }
   });
 });
 
@@ -324,13 +370,13 @@ app.post('/CREATE-EMPLOYEE', function (req, res) {
 
   //create intern uid
   var employee_uid = "2" + uid;
-  var pass = req.body.password;
+  var pass = encrypt(req.body.password);
 
   //store variables
   var uid = UID(req.body.username);
   var firstName = req.body.firstName;
   var lastName = req.body.lastName;
-  var password = req.body.password;
+  var password = encrypt(req.body.password);
   var email = req.body.username;
   var company = req.body.company;
   var location = req.body.location;
@@ -371,7 +417,7 @@ app.post('/UPDATE-PREFERENCES/BASIC-PREFERENCES', function (req, res) {
 
   //create UID (0 for interns)
   console.log("UID generated:");
-  var uid = req.body.username;
+  var uid = req.body.userID;
   console.log(uid);
 
   //create intern uid
@@ -500,8 +546,8 @@ app.post('/FORGOT-EMPLOYEE-PASSWORD', function (req, res) {
 
   //create intern uid
   var employee_uid = "2" + uid;
-  var pass = req.body.password;
-  create.createPassword(employeeRef, employee_uid, req.body.password);
+  var pass = encrypt(req.body.password);
+  create.createPassword(employeeRef, employee_uid, pass);
   res.json({
     "status": true
   });
@@ -519,8 +565,8 @@ app.post('/FORGOT-INTERN-PASSWORD', function (req, res) {
 
   //create intern uid
   var intern_uid = "1" + uid;
-  var pass = req.body.password;
-  create.createPassword(internRef, intern_uid, req.body.password);
+  var pass = encrypt(req.body.password);
+  create.createPassword(internRef, intern_uid, pass);
   res.json({
     "status": true
   });
@@ -578,26 +624,10 @@ app.post('/GET-MASTER-LIST', function (req, res) {
 
 var y;
 app.listen(port, function () {
-  create.createIntern(internRef, 1143, "a@gmail.com", "company", "novalue");
-  var pass_shasum = "vaz";//crypto.createHash('sha256').update("vaz").digest('hex');
-  create.createBasicPreferences(internRef, 1143, "KUNAL", "SINHA", "yeah", "fbLin", "twitterLink", "linkedin");
 
-  create.createEmployee(employeeRef, 2129, "hey", "rathod", pass_shasum, "b@gmail.com", "company", "loc", "bio", "fb", "linkin", "twit");
-
-  create.createBasicPreferences(internRef, 669732542619, "ED", "Bob", "not yeah", "fb@iasrj", "twitter@pasioe", "linkedin@asjdeh");
-
-  create.createIntern(internRef, 1146, "c@g.c", "company", "novalue");
-
-  create.createPassword(internRef, 1143, pass_shasum);
-  create.createPassword(employeeRef, 2129, "logs");
-  //test();
-  var z = read.verifyIntern(internRef, "DJW3e123", "password", function (z) {
-    console.log(z);
-    //some shit on z
-    //return zyz
-  });
-
-  var xyz = read.getIntern(internRef, "12345");
+  //call test
+  console.log('Testing begins, check database');
+  test();
   console.log('Testing done');
   console.log('Database setup done');
   console.log('App listening on port: ' + port + '!');
