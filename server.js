@@ -1,5 +1,7 @@
 //dependencies:
-
+module.exports = {
+  UID
+}
 //server dependencies
 var express = require('express');
 var app = express();
@@ -36,27 +38,19 @@ var internRef = db.ref("/User/Interns");
 var employeeRef = db.ref("/User/Employees");
 
 function test() {
-      create.createCompany(companyRef, 'GOGGLE', listOfLocations = "novalue", listOfEmployees = "novalue");
-      create.createIntern(internRef,'Hiten','Rathod', 'HIHELLO123','hitenrathod98@gmail.com','Purdue');
-      var test = ref.child("NEW_HITEN");
-      test.set({
-        Hiten: {
-        date_of_birth: "May 30, 1998",
-        full_name: "Hiten Rathod"
-      },
-      Darwin: {
-        date_of_birth: "Jan 11, 1999",
-        full_name: "Darwin Vaz"
-      }
-    });
-}
-
-function verifyIntern(username, password) {
-  return read.verifyIntern(internRef, username, password);
-}
-
-function verifyEmployee(username, password) {
-  return read.verifyIntern(employeeRef, username, password);
+  create.createCompany(companyRef, 'GOGGLE', listOfLocations = "novalue", listOfEmployees = "novalue");
+  create.createIntern(internRef, 'Hiten', 'Rathod', 'HIHELLO123', 'hitenrathod98@gmail.com', 'Purdue');
+  var test = ref.child("NEW_HITEN");
+  test.set({
+    Hiten: {
+      date_of_birth: "May 30, 1998",
+      full_name: "Hiten Rathod"
+    },
+    Darwin: {
+      date_of_birth: "Jan 11, 1999",
+      full_name: "Darwin Vaz"
+    }
+  });
 }
 
 function UID(username) {
@@ -64,16 +58,16 @@ function UID(username) {
   for (i = 0; i < username.length; i++) {
     var char = username.charCodeAt(i);
     //52 chars (lower and upper letters + 10 digits)
-    uid = (uid * 62) + char;
+    uid = (uid * 281) % 65 + char;
   }
-  return(String(uid));
+  return (String(uid));
 }
 
 //set bodyParser
 app.use(bodyParser.json());
 
 //login handler
-app.post('/LOGIN', function(req, res) {
+app.post('/LOGIN', function (req, res) {
   console.log('Received request for LOGIN:');
   console.log(req.body);
 
@@ -104,28 +98,31 @@ app.post('/LOGIN', function(req, res) {
   console.log(actual_uid_employee);
 
   //check and return
-  read.verifyIntern(internRef, actual_uid_intern, "vaz", (x) =>
-  {
+  read.verifyIntern(internRef, actual_uid_intern, pass_shasum, (x) => {
     console.log(x);
     //make the login token
-    /*res.json({
-      "userID": actual_uid_intern
-    });*/
+    if (x != null)
+      res.json({
+        "userID": actual_uid_intern
+      });
+    console.log("updated from intern");
   });
-  read.verifyEmployee(employeeRef, actual_uid_employee, "vaz", (x) =>
-  {
+  read.verifyEmployee(employeeRef, actual_uid_employee, pass_shasum, (x) => {
     console.log(x);
     //make the login token
-    /*res.json({
-      "userID": actual_uid_employee
-    });*/
+    if (x != null)
+      res.json({
+        "userID": actual_uid_employee
+      });
+    console.log("updated from employee");
   });
 
+  //return null
   console.log('Done handling login');
 });
 
-//intial set password request handler
-app.post('/SET-INTERN-PASSWORD', function(req, res) {
+//intial set password request handler for intern
+app.post('/SET-INTERN-PASSWORD', function (req, res) {
   console.log('Received request for SET-PASSWORD-INTERN:');
   console.log(req.body);
 
@@ -135,174 +132,16 @@ app.post('/SET-INTERN-PASSWORD', function(req, res) {
   console.log(uid);
 
   //create intern uid
-  var intern_uid = "0" + uid;
+  var intern_uid = "1" + uid;
   var pass = req.body.password;
   create.createPassword(internRef, intern_uid, req.body.password);
   res.json({
-      "status": true
+    "status": true
   });
 });
 
-//initial set password for employee
-app.post('/SET-EMPLOYEE-PASSWORD', function(req, res) {
-  console.log('Received request for SET-PASSWORD-EMPLOYEE:');
-  console.log(req.body);
-
-  //create UID (0 for interns)
-  console.log("UID generated:");
-  var uid = UID(req.body.username);
-  console.log(uid);
-
-  //create intern uid
-  var employee_uid = "1" + uid;
-  var pass = req.body.password;
-  create.createPassword(employeeRef, employee_uid, req.body.password);
-  res.json({
-      "status": true
-  });
-});
-
-//initial create intern
-app.post('/CREATE-INTERN', function(req, res) {
-  console.log('Received request for CREATE-INTERN:');
-  console.log(req.body);
-
-  //create UID (0 for interns)
-  console.log("UID generated:");
-  var uid = "0" + UID(req.body.username);
-  console.log(uid);
-  var location = req.body.location;
-  var company = req.body.company;
-  create.createIntern(internRef, uid, req.body.username, company, location);
-  res.json({
-      "status": true
-  });
-});
-
-//register handler
-app.post('/REGISTER',function( req, res) {
-
-  //verifyUserExists();
-  //if(!verifyUserExists())
-  //do registering shit
-
-
-  var STATUS = false;
-  res.json({
-    //check for errors from database:
-    //if(!error)
-    "STATUS": "SUCCESSFUL"
-    //else
-    //"STATUS": "ERROR CODE" + error
-  });
-});
-
-//intial set preferences request handler
-app.post('/UPDATE-PREFERENCES/BASIC-PREFERENCES', function(req, res) {
-  console.log('Received request for /UPDATE-PREFERENCES/BASIC-PREFERENCES:');
-  console.log(req.body);
-
-  //create UID (0 for interns)
-  console.log("UID generated:");
-  var uid = UID(req.body.username);
-  console.log(uid);
-
-  //create intern uid
-  var intern_uid = "0" + uid;
-  var pass = req.body.password;
-  create.createBasicPreferences(internRef, intern_uid, options);
-  res.json({
-      "status": true
-  });
-});
-
-//initial Roommate preferences
-app.post('/UPDATE-PREFERENCES/ROOMMATE-PREFERENCES', function(req, res) {
-  console.log('Received request for /UPDATE-PREFERENCES/ROOMMATE-PREFERENCES:');
-  console.log(req.body);
-
-  //create UID (0 for interns)
-  console.log("UID generated:");
-  var uid = UID(req.body.username);
-  console.log(uid);
-
-  //create intern uid
-  var intern_uid = "0" + uid;
-  var pass = req.body.password;
-  create.createRoommatePreferences(internRef, intern_uid, options);
-  res.json({
-      "status": true
-  });
-});
-
-//initial Housing preferences
-app.post('/UPDATE-PREFERENCES/HOUSING-PREFERENCES', function(req, res) {
-  console.log('Received request for /UPDATE-PREFERENCES/HOUSING-PREFERENCES:');
-  console.log(req.body);
-
-  //create UID (0 for interns)
-  console.log("UID generated:");
-  var uid = UID(req.body.username);
-  console.log(uid);
-
-  //create intern uid
-  var intern_uid = "0" + uid;
-  var pass = req.body.password;
-  create.createHousingPreferences(internRef, intern_uid, options);
-  res.json({
-      "status": true
-  });
-});
-
-//reverse hashing
-function revUID(uid) {
-  var email = "";
-  while(uid != 0) {
-    var char = uid%62;
-    email = email + String.fromCharCode(char);
-    uid = (uid/62>>0);
-  }
-}
-
-//get email back from uid
-app.post('/GET-EMAIL', function(req, res) {
-  console.log('Received request for /GET-EMAIL:');
-  console.log(req.body);
-
-  //create UID (0 for interns)
-  console.log("email generated:");
-  var uid = req.body.userID;
-  uid = uid.substring(1,uid.length);
-  var email = revUID(uid);
-  console.log(email);
-
-  //create intern uid
-  res.json({
-      "email": email
-  });
-});
-
-//forgot password for employee
-app.post('/FORGOT-EMPLOYEE-PASSWORD', function(req, res) {
-  console.log('Received request for FORGOT-PASSWORD-EMPLOYEE:');
-  console.log(req.body);
-
-  //create UID (0 for interns)
-  console.log("UID generated:");
-  var uid = UID(req.body.username);
-  console.log(uid);
-
-  //create intern uid
-  var employee_uid = "1" + uid;
-  var pass = req.body.password;
-  create.createPassword(employeeRef, employee_uid, req.body.password);
-  res.json({
-      "status": true
-  });
-});
-
-//forgot password request handler
-app.post('/FORGOT-INTERN-PASSWORD', function(req, res) {
+//forgot password handler
+app.post('/FORGOT-INTERN-PASSWORD', function (req, res) {
   console.log('Received request for FORGOT-PASSWORD-INTERN:');
   console.log(req.body);
 
@@ -312,35 +151,447 @@ app.post('/FORGOT-INTERN-PASSWORD', function(req, res) {
   console.log(uid);
 
   //create intern uid
-  var intern_uid = "0" + uid;
+  var intern_uid = "1" + uid;
+  var pass = req.body.newPassword;
+  create.createPassword(internRef, intern_uid, req.body.newPassword);
+  res.json({
+    "status": true
+  });
+});
+
+//reset password handler
+app.post('/RESET-PASSWORD', function (req, res) {
+  console.log('Received request for RESET-PASSWORD:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID received:");
+  var uid = req.body.userID;
+  console.log(uid);
+
+  //password
+  var pass = req.body.newPassword;
+
+  if(uid.charAt(0) == '1')
+  {
+    create.createPassword(internRef, uid, req.body.newPassword);
+    res.json({
+      "status": true
+    });
+  }
+  else if(uid.charAt(0) == '2')
+  {
+    create.createPassword(employeeRef, uid, req.body.newPassword);
+    res.json({
+      "status": true
+    });
+  }
+  else{
+    res.json({
+      "status": false
+    });
+  }
+});
+
+//initial set password for employee
+app.post('/SET-EMPLOYEE-PASSWORD', function (req, res) {
+  console.log('Received request for SET-PASSWORD-EMPLOYEE:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  var uid = UID(req.body.username);
+  console.log(uid);
+
+  //create intern uid
+  var employee_uid = "2" + uid;
+  var pass = req.body.password;
+  create.createPassword(employeeRef, employee_uid, req.body.password);
+  res.json({
+    "status": true
+  });
+});
+
+//remove user handler
+app.post('/REMOVE-USER', function (req, res) {
+  console.log('Received request for REMOVE-USER:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID received:");
+  var uid = req.body.userID;
+  console.log(uid);
+
+  update.removeIntern(internRef, uid, (x) => {
+    if (x != false)
+    {
+      res.json({
+        "status": true
+      });
+    }
+    else {
+      res.json({
+        "status": false
+      });
+    }
+  });
+});
+
+//get company
+app.post('/GET-COMPANY', function (req, res) {
+  console.log('Received request for GET-COMPANY:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  var pin = req.body.pid;
+  console.log(pin);
+
+  read.getCompany(companyRef, pin, (x) => {
+    if (x != null)
+      res.json({
+        "status": true
+      });
+  });
+});
+
+//get basic preferences
+app.post('/GET-PREFERENCES/BASIC-PREFERENCES', function (req, res) {
+  console.log('Received request for BAISC PREFERENCES:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID received:");
+  var uid = req.body.uid;
+  console.log(uid);
+
+  //create intern uid
+  read.getBasicPreferences(internRef, uid, (x) => {
+    if (x != null)
+      console.log(x);
+    res.json({
+      "basic": x
+    });
+  });
+});
+
+//get housing PREFERENCES
+app.post('/GET-PREFERENCES/HOUSING-PREFERENCES', function (req, res) {
+  console.log('Received request for HOUSING PREFERENCES:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID received:");
+  var uid = req.body.userID;
+  console.log(uid);
+
+  //create intern uid
+  read.getHousingPreferences(internRef, uid, (x) => {
+    if (x != null)
+      res.json({
+        "housing": x
+      });
+  });
+});
+
+//get roommate preferences
+app.post('/GET-PREFERENCES/ROOMMATE-PREFERENCES', function (req, res) {
+  console.log('Received request for ROOMMATE PREFERENCES:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID received:");
+  var uid = req.body.userID;
+  console.log(uid);
+
+  //create intern uid
+  read.getRoommatePreferences(internRef, uid, (x) => {
+    if (x != null)
+      res.json({
+        "roommate": x
+      });
+  });
+});
+
+//create employee hadnler
+app.post('/CREATE-EMPLOYEE', function (req, res) {
+  console.log('Received request for CREATE-EMPLOYEE:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  console.log(uid);
+
+  //create intern uid
+  var employee_uid = "2" + uid;
+  var pass = req.body.password;
+
+  //store variables
+  var uid = UID(req.body.username);
+  var firstName = req.body.firstName;
+  var lastName = req.body.lastName;
+  var password = req.body.password;
+  var email = req.body.username;
+  var company = req.body.company;
+  var location = req.body.location;
+  var description = req.body.description;
+  var facebook = req.body.facebook;
+  var linkedin = req.body.linkedin;
+  var twitter = req.body.twitter;
+
+  create.createEmployee(employeeRef, uid, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter);
+
+  //create.createEmployee(employeeRef, employee_uid, req.body.password);
+  res.json({
+    "status": true
+  });
+});
+
+//initial create intern
+app.post('/CREATE-INTERN', function (req, res) {
+  console.log('Received request for CREATE-INTERN:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  var uid = "1" + UID(req.body.username);
+  console.log(uid);
+  var location = req.body.location;
+  var company = req.body.company;
+  create.createIntern(internRef, uid, req.body.username, company, location);
+  res.json({
+    "status": true
+  });
+});
+
+//intial set preferences request handler
+app.post('/UPDATE-PREFERENCES/BASIC-PREFERENCES', function (req, res) {
+  console.log('Received request for /UPDATE-PREFERENCES/BASIC-PREFERENCES:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  var uid = req.body.username;
+  console.log(uid);
+
+  //create intern uid
+  var intern_uid = uid;
+  var firstName = req.body.firstName;
+  var lastName = req.body.lastName;
+  var description = req.body.description;
+  var fbLink = req.body.fbLink;
+  var twitterLink = req.body.twitterLink;
+  var linkedin = req.body.linkedInLink;
+  create.createBasicPreferences(internRef, intern_uid, firstName, lastName, description, fbLink, twitterLink, linkedin);
+  res.json({
+    "status": true
+  });
+});
+
+//initial Roommate preferences
+app.post('/UPDATE-PREFERENCES/ROOMMATE-PREFERENCES', function (req, res) {
+  console.log('Received request for /UPDATE-PREFERENCES/ROOMMATE-PREFERENCES:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  var uid = req.body.userID;
+  console.log(uid);
+
+  //create intern uid
+  var intern_uid = uid;
+  var youguest = req.body.youguest;
+  var themguest = req.body.themguest;
+  var youpet = req.body.youpet;
+  var thempet = req.body.thempet;
+  var sharing = req.body.sharing;
+  var smoke = req.body.smoke;
+  var bedtime = req.body.bedtime;
+  var waketime = req.body.waketime;
+  var lights = req.body.lights;
+  var clean = req.body.clean;
+  create.createRoommatePreferences(internRef, intern_uid, youguest, themguest, youpet, thempet, sharing, smoke, bedtime, waketime, lights, clean);
+  res.json({
+    "status": true
+  });
+});
+
+//initial Housing preferences
+app.post('/UPDATE-PREFERENCES/HOUSING-PREFERENCES', function (req, res) {
+  console.log('Received request for /UPDATE-PREFERENCES/HOUSING-PREFERENCES:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  var uid = req.body.userID;
+  console.log(uid);
+
+  //create intern uid
+  var intern_uid = uid;
+
+  create.createHousingPreferences(internRef, intern_uid, req.body.desiredPrice, req.body.desiredRoommates, req.body.desiredDistance, req.body.desiredDuration);
+  res.json({
+    "status": true
+  });
+});
+
+//reverse hashing
+function revUID(uid) {
+  console.log(uid);
+  var email = "";
+  while (uid != 0) {
+    var char = uid % 281;
+    console.log(char);
+    email = email + String.fromCharCode(char);
+    console.log(email);
+    uid = (uid / 281 >> 0);
+  }
+}
+
+//get email back from uid
+app.post('/GET-EMAIL', function (req, res) {
+  console.log('Received request for /GET-EMAIL:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("email generated:");
+  var uid = req.body.userID;
+  //uid = uid.substring(1,uid.length);
+  //var email = revUID(uid);
+
+  //create intern uid
+  read.getIntern(internRef, uid, (x) => {
+    console.log(x[1]);
+    res.json({
+      "email": x[1]
+    });
+  });
+});
+
+//get intern handler
+app.post('/GET-INTERN', function (req, res) {
+  console.log('Received request for /GET-INTERN:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("email generated:");
+  var uid = req.body.userID;
+  //uid = uid.substring(1,uid.length);
+  //var email = revUID(uid);
+
+  //create intern uid
+  read.getIntern(internRef, uid, (x) => {
+    console.log(x);
+    res.json({
+      "email": x
+    });
+  });
+});
+
+//forgot password for employee
+app.post('/FORGOT-EMPLOYEE-PASSWORD', function (req, res) {
+  console.log('Received request for FORGOT-PASSWORD-EMPLOYEE:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  var uid = UID(req.body.username);
+  console.log(uid);
+
+  //create intern uid
+  var employee_uid = "2" + uid;
+  var pass = req.body.password;
+  create.createPassword(employeeRef, employee_uid, req.body.password);
+  res.json({
+    "status": true
+  });
+});
+
+//forgot password request handler
+app.post('/FORGOT-INTERN-PASSWORD', function (req, res) {
+  console.log('Received request for FORGOT-PASSWORD-INTERN:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID generated:");
+  var uid = UID(req.body.username);
+  console.log(uid);
+
+  //create intern uid
+  var intern_uid = "1" + uid;
   var pass = req.body.password;
   create.createPassword(internRef, intern_uid, req.body.password);
   res.json({
-      "status": true
+    "status": true
+  });
+});
+
+app.post('/GET-EMPLOYEE', function (req, res) {
+  console.log('Received request for EMPLOYEE:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID received:");
+  var uid = req.body.userID;
+  console.log(uid);
+
+  //create intern uid
+  read.getEmployee(employeeRef, uid, (x) => {
+    if (x != null)
+      console.log(x);
+    res.json({
+      "employee": x
+    });
   });
 });
 
 //master list handler
-app.post('/GET-MASTER-LIST',function( req, res) {
+app.post('/GET-MASTER-LIST', function (req, res) {
   console.log("Master list request received");
-  res.json({
-    //check for authority
-    //if(authority)
-    //get appropriate master list
-    "LIST": ["Adam", "Arvindh", "Darwin", "Hiten", "Kunal"]
-    //else
-    //"STATUS": "ERROR CODE" + error
-  });
+  console.log(req.body)
+  //check for authority
+  //if(authority)
+  //get appropriate master list
+  if (req.body.userID.charAt(0) == '1') {
+    res.json({
+      "status": false
+    });
+    return;
+  }
+  else {
+    read.getEmployee(employeeRef, req.body.userID, (x) => {
+      console.log(x[0]);
+      read.getMasterListOfInterns(internRef, x[0], (y) => {
+        console.log(y);
+        console.log("Master list printed");
+        res.json({
+          "userId": req.body.userID,
+          "list": y
+        });
+      }
+
+      );
+    });
+
+  }
 });
 
 var y;
 app.listen(port, function () {
-  create.createIntern(internRef, 11711362612, "r@pur.c", "company", "novalue");
+  create.createIntern(internRef, 1143, "a@gmail.com", "company", "novalue");
   var pass_shasum = "vaz";//crypto.createHash('sha256').update("vaz").digest('hex');
-  create.createEmployee(employeeRef, 21711362612,"hey", "rathod",pass_shasum, "r@pur.c", "company", "loc", "bio", "fb", "linkin", "twit");
-  create.createPassword(internRef, 11711362612, pass_shasum);
-//test();
-  var z = read.verifyIntern(internRef, "DJW3e123", "password", function(z) {
+  create.createBasicPreferences(internRef, 1143, "KUNAL", "SINHA", "yeah", "fbLin", "twitterLink", "linkedin");
+
+  create.createEmployee(employeeRef, 2129, "hey", "rathod", pass_shasum, "b@gmail.com", "company", "loc", "bio", "fb", "linkin", "twit");
+
+  create.createBasicPreferences(internRef, 669732542619, "ED", "Bob", "not yeah", "fb@iasrj", "twitter@pasioe", "linkedin@asjdeh");
+
+  create.createIntern(internRef, 1146, "c@g.c", "company", "novalue");
+
+  create.createPassword(internRef, 1143, pass_shasum);
+  create.createPassword(employeeRef, 2129, "logs");
+  //test();
+  var z = read.verifyIntern(internRef, "DJW3e123", "password", function (z) {
     console.log(z);
     //some shit on z
     //return zyz

@@ -110,7 +110,10 @@ module.exports = {
     	ref.once("value").then(function(snapshot) {
     		var item = snapshot.val();
     		if(item == password)
-    			internRef.child(ID).remove();
+    		{
+					internRef.child(ID).remove();
+					return true;
+				}
     		else
     			return false;
     	});

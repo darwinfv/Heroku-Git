@@ -150,7 +150,7 @@ function verifyIntern(internRef, ID, password, callback) {
 			callback(ID);
 		}
 		else {
-			callback("SHIIIIIT");
+			callback(null);
 		}
 	});
 }
