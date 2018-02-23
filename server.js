@@ -108,7 +108,7 @@ app.post('/LOGIN',function( req, res) {
   }
   else {
     res.json({
-      "userID":null
+      "userID": null
     });
   }
 
@@ -116,6 +116,13 @@ app.post('/LOGIN',function( req, res) {
 });
 
 app.post('/REGISTER',function( req, res) {
+
+  //verifyUserExists();
+  //if(!verifyUserExists())
+  //do registering shit
+
+  
+  var STATUS = false;
   res.json({
     //check for errors from database:
     //if(!error)
