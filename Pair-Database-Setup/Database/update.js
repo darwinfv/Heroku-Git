@@ -17,7 +17,7 @@
 	/ @param childName the name of the object you want to update
 	/ @param itemName the item you want to update
 	/ @param newValue the values you want to add
-	*/
+*/
 	function getSnapshot(relevantRef, childName, itemName, newValue) {
 		var ref = relevantRef.child(childName).child(itemName);
 		var oldlist = [];

@@ -19,7 +19,9 @@
     "body-parser": "^1.18.2",
     "crypto": "^1.0.1",
     "express": "^4.16.2",
-    "firebase-admin": "^5.9.0"
+    "firebase-admin": "^5.9.0",
+    "method-override": "^2.3.10",
+    "middleware": "^1.0.0"
   },
   "devDependencies": {
     "nodemon": "^1.14.12"

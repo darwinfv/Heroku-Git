@@ -93,7 +93,7 @@ function createHousingPreferences(internRef, ID, price, roommates, distance, dur
 	});
 }
 
-	function createProfilePicture(internRef, ID, image) {
+function createProfilePicture(internRef, ID, image) {
 	var filename = [ID]; // image's name would be the intern's ID
 	var storageRef = firebase.storage().ref('/ProfilePictures' + filename);
 	var uploadTask = storageRef.put(image);

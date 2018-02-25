@@ -20,6 +20,26 @@ var create = require('./Pair-Database-Setup/Database/create.js');
 //setting up dtaabase
 var admin = require("firebase-admin");
 
+//setting up CORS
+//app.use(express.methodOverride());
+// ## CORS middleware
+//
+// see: http://stackoverflow.com/questions/7067966/how-to-allow-cors-in-express-nodejs
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    // intercept OPTIONS method
+    if ('OPTIONS' == req.method) {
+      res.send(200);
+    }
+    else {
+      next();
+    }
+};
+app.use(allowCrossDomain);
+
 //uncomment if first time
 //var firebase_app = admin.initializeApp();
 //serviceAccount
@@ -37,10 +57,6 @@ var companyRef = db.ref("/Company");
 var internRef = db.ref("/User/Interns");
 var employeeRef = db.ref("/User/Employees");
 
-
-function test2() {
-
-}
 //test-function
 function test() {
   //create an intern
@@ -111,7 +127,7 @@ function encrypt(password) {
   var cipher = password;
   var actual = "";
   for(i = 0; i < password.length;i++) {
-    console.log((password.charCodeAt(i)*941)%16);
+    //console.log((password.charCodeAt(i)*941)%16);
     actual = actual + ((password.charCodeAt(i)*941)%16).toString(16);
   }
   //return cipher
@@ -124,7 +140,7 @@ function UID(username) {
   for (i = 0; i < username.length; i++) {
     var char = username.charCodeAt(i);
     //52 chars (lower and upper letters + 10 digits)
-    uid = (uid * 941) % 742 + char;
+    uid = (uid * 941) % 741 + char;
   }
   return (String(uid));
 }
@@ -599,6 +615,7 @@ app.post('/FORGOT-INTERN-PASSWORD', function (req, res) {
   });
 });
 
+//initial get employee request handler
 app.post('/GET-EMPLOYEE', function (req, res) {
   console.log('Received request for EMPLOYEE:');
   console.log(req.body);
@@ -649,13 +666,14 @@ app.post('/GET-MASTER-LIST', function (req, res) {
   }
 });
 
-var y;
+//actual main function
 app.listen(port, function () {
 
   //call test
   console.log('Testing begins, check database');
   test();
   console.log('Testing done');
+
   console.log('Database setup done');
   console.log('App listening on port: ' + port + '!');
 });
