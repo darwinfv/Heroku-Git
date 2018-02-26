@@ -670,6 +670,7 @@ app.post('/GET-MASTER-LIST', function (req, res) {
 app.listen(port, function () {
 
   //call test
+  console.log("SERVER STARTS");
   console.log('Testing begins, check database');
   test();
   console.log('Testing done');
