@@ -13,9 +13,9 @@ var bodyParser = require('body-parser');
 var crypto = require('crypto');
 
 //database dependencies
-var update = require('./Pair-Database-Setup/Database/update.js');
 var read = require('./Pair-Database-Setup/Database/read.js');
 var create = require('./Pair-Database-Setup/Database/create.js');
+var update = require('./Pair-Database-Setup/Database/update.js');
 
 //setting up dtaabase
 var admin = require("firebase-admin");
@@ -147,6 +147,9 @@ function UID(username) {
 
 //set bodyParser
 app.use(bodyParser.json());
+app.get('/', function(req, res) {
+  res.send('Hello');
+})
 
 //login handler
 app.post('/LOGIN', function (req, res) {
@@ -180,23 +183,37 @@ app.post('/LOGIN', function (req, res) {
   console.log(actual_uid_employee);
 
   //check and return
-  read.verifyIntern(internRef, actual_uid_intern, pass_shasum, (x) => {
-    console.log(x);
+  read.verifyUser(internRef, actual_uid_intern, pass_shasum, (x) => {
     //make the login token
-    if (x != null)
+    if (x == true)
+    {
       res.json({
-        "userID": actual_uid_intern
+        "userID": actual_uid_intern,
+        "status": true,
+        "authority": "intern"
       });
-    console.log("updated from intern");
-  });
-  read.verifyEmployee(employeeRef, actual_uid_employee, pass_shasum, (x) => {
-    console.log(x);
-    //make the login token
-    if (x != null)
-      res.json({
-        "userID": actual_uid_employee
+      console.log("intern: " + x);
+    }
+    else
+    {
+      read.verifyUser(employeeRef, actual_uid_employee, pass_shasum, (y) => {
+        //make the login token
+        if (y == true)
+        {
+          res.json({
+            "userID": actual_uid_employee,
+            "status": true,
+            "authority": "employee"
+          });
+          console.log("employee: " + y);
+        }
+        else {
+          res.json({
+            "status": false
+          });
+        }
       });
-    console.log("updated from employee");
+    }
   });
 
   //return null
@@ -331,14 +348,17 @@ app.post('/GET-COMPANY', function (req, res) {
 
   read.getCompany(companyRef, pin, (x) => {
     if (x != null) {
-        console.log(x[0]);
-        var y = x.splice(1);
-        console.log(y);
-        res.json({
-        "company": x[0],
-        "location": y,
-        "status": true
-        });
+        x['status'] = 'true';
+        console.log(x);
+        //var y = x.splice(1);
+        //console.log(y);
+        res.send(x);
+    }
+    else {
+      res.json ({
+        "status": false,
+        "error": "Company does not exist"
+      });
     }
   });
 });
@@ -350,16 +370,18 @@ app.post('/GET-PREFERENCES/BASIC-PREFERENCES', function (req, res) {
 
   //create UID (0 for interns)
   console.log("UID received:");
-  var uid = req.body.uid;
+  var uid = req.body.userID;
   console.log(uid);
 
   //create intern uid
   read.getBasicPreferences(internRef, uid, (x) => {
     if (x != null)
       console.log(x);
-    res.json({
+    //res = x;
+    res.send(x);
+    /*res.json({
       "basic": x
-    });
+    });*/
   });
 });
 
@@ -376,9 +398,10 @@ app.post('/GET-PREFERENCES/HOUSING-PREFERENCES', function (req, res) {
   //create intern uid
   read.getHousingPreferences(internRef, uid, (x) => {
     if (x != null)
-      res.json({
-        "housing": x
-      });
+    {
+      console.log(x);
+      res.send(x);
+    }
   });
 });
 
@@ -395,9 +418,10 @@ app.post('/GET-PREFERENCES/ROOMMATE-PREFERENCES', function (req, res) {
   //create intern uid
   read.getRoommatePreferences(internRef, uid, (x) => {
     if (x != null)
-      res.json({
-        "roommate": x
-      });
+    {
+      console.log(x);
+      res.send(x);
+    }
   });
 });
 
@@ -406,19 +430,16 @@ app.post('/CREATE-EMPLOYEE', function (req, res) {
   console.log('Received request for CREATE-EMPLOYEE:');
   console.log(req.body);
 
-  //create UID (0 for interns)
-  console.log("UID generated:");
-  console.log(uid);
 
-  //create intern uid
-  var employee_uid = "2" + uid;
-  var pass = encrypt(req.body.password);
+  var password = encrypt(req.body.password);
 
   //store variables
-  var uid = "2" + UID(req.body.username);
+  var employee_uid = "2" + UID(req.body.username);
+  //create UID (2 for employee)
+  console.log("UID generated:");
+  console.log(employee_uid);
   var firstName = req.body.firstName;
   var lastName = req.body.lastName;
-  var password = encrypt(req.body.password);
   var email = req.body.username;
   var company = req.body.company;
   var location = req.body.location;
@@ -427,11 +448,11 @@ app.post('/CREATE-EMPLOYEE', function (req, res) {
   var linkedin = req.body.linkedin;
   var twitter = req.body.twitter;
 
-  create.createEmployee(employeeRef, companyRef, uid, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter);
+  create.createEmployee(employeeRef, companyRef, employee_uid, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter);
 
   //create.createEmployee(employeeRef, employee_uid, req.body.password);
   res.json({
-    "userID": uid,
+    "userID": employee_uid,
     "status": true
   });
 });
@@ -448,6 +469,9 @@ app.post('/CREATE-INTERN', function (req, res) {
   var location = req.body.location;
   var company = req.body.company;
   create.createIntern(internRef, uid, req.body.username, company, location);
+  create.createBasicPreferences(internRef, uid, "", "", "", "", "", "");
+  create.createRoommatePreferences(internRef, uid, "", "", "", "", "", "", "", "", "", "");
+  create.createHousingPreferences(internRef, uid, "", "", "", "");
   res.json({
     "status": true
   });
@@ -518,7 +542,8 @@ app.post('/UPDATE-PREFERENCES/HOUSING-PREFERENCES', function (req, res) {
   //create intern uid
   var intern_uid = uid;
 
-  create.createHousingPreferences(internRef, intern_uid, req.body.desiredPrice, req.body.desiredRoommates, req.body.desiredDistance, req.body.desiredDuration);
+  create.createHousingPreferences(internRef, intern_uid, req.body.desiredPrice, req.body.desiredRoommate, req.body.desiredDistance, req.body.desiredDuration);
+
   res.json({
     "status": true
   });
@@ -550,9 +575,9 @@ app.post('/GET-EMAIL', function (req, res) {
 
   //create intern uid
   read.getIntern(internRef, uid, (x) => {
-    console.log(x[1]);
+    console.log(x);
     res.json({
-      "email": x[1]
+      "email": x.email
     });
   });
 });
@@ -571,9 +596,7 @@ app.post('/GET-INTERN', function (req, res) {
   //create intern uid
   read.getIntern(internRef, uid, (x) => {
     console.log(x);
-    res.json({
-      "email": x
-    });
+    res.send(x);
   });
 });
 
@@ -628,36 +651,35 @@ app.post('/GET-EMPLOYEE', function (req, res) {
   //create intern uid
   read.getEmployee(employeeRef, uid, (x) => {
     if (x != null)
+    {
       console.log(x);
-    res.json({
-      "employee": x
-    });
+      res.send(x);
+    }
   });
 });
 
 //master list handler
 app.post('/GET-MASTER-LIST', function (req, res) {
   console.log("Master list request received");
-  console.log(req.body)
+  console.log(req.body);
+  console.log("Done printing out request");
   //check for authority
   //if(authority)
   //get appropriate master list
   if (req.body.userID.charAt(0) == '1') {
     res.json({
-      "status": false
+      "status": false,
+      "error": "intern can't get master list"
     });
     return;
   }
   else {
     read.getEmployee(employeeRef, req.body.userID, (x) => {
-      console.log(x[0]);
-      read.getMasterListOfInterns(internRef, x[0], (y) => {
+      //console.log(x);
+      read.getMasterListOfInterns(internRef, x.company, (y) => {
         console.log(y);
         console.log("Master list printed");
-        res.json({
-          "userId": req.body.userID,
-          "list": y
-        });
+        res.send(y);
       }
 
       );
@@ -672,9 +694,19 @@ app.listen(port, function () {
   //call test
   console.log("SERVER STARTS");
   console.log('Testing begins, check database');
-  test();
+  //test();
   console.log('Testing done');
 
   console.log('Database setup done');
   console.log('App listening on port: ' + port + '!');
+});
+
+//error handler
+app.use(function (err, req, res, next) {
+  console.error(err);
+  res.status(500).send({
+    "status": false,
+    "error": 'Something failed, plz check server for more details',
+    "details": err
+  });
 });

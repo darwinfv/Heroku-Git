@@ -1,5 +1,4 @@
-
-	module.exports = {
+module.exports = {
 			getSnapshot,
 			updateCompany,
 			updateEmployee,
@@ -17,7 +16,7 @@
 	/ @param childName the name of the object you want to update
 	/ @param itemName the item you want to update
 	/ @param newValue the values you want to add
-*/
+	*/
 	function getSnapshot(relevantRef, childName, itemName, newValue) {
 		var ref = relevantRef.child(childName).child(itemName);
 		var oldlist = [];
@@ -87,29 +86,23 @@
 		}
 	}
 
-	/*
-	/	this function only works for interns. talk to hiten to find out code in ID
-	*/
-	function updatePassword(internRef, ID, newPassword, oldPassword) {
-		var ref = internRef.child(ID).child("password");
+	function updatePassword(relevantRef, ID, newPassword, oldPassword) {
+		var ref = relevantRef.child(ID).child("password");
 		ref.once("value").then(function(snapshot) {
 			var item = snapshot.val();
-			if(item == oldPassword)
-				internRef.child(ID).update({
+			if(item == oldPassword) {
+				relevantRef.child(ID).update({
 					"password": newPassword
-				});
-			else
-				return null;
+							});
+							return "success";
+					}
+			else {
+				return "failure";
+					}
 		});
 	}
 
-	function removeIntern(internRef, ID, password) {
-		var ref = internRef.child(ID).child("password");
-		ref.once("value").then(function(snapshot) {
-			var item = snapshot.val();
-			if(item == password)
-				internRef.child(ID).remove();
-			else
-				return null;
-		});
+	function removeIntern(internRef, ID) {
+	internRef.child(ID).remove();
+			return true;
 	}
