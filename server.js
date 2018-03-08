@@ -5,7 +5,7 @@ module.exports = {
 //server dependencies
 var express = require('express');
 var app = express();
-var port = 9090;
+var port =  (process.env.PORT || 9090);
 var axios = require('axios');
 var bodyParser = require('body-parser');
 
@@ -53,6 +53,7 @@ admin.initializeApp({
 //get a database reference
 var db = admin.database();
 var baseRef = db.ref("/");
+
 var companyRef = db.ref("/Company");
 var internRef = db.ref("/User/Interns");
 var employeeRef = db.ref("/User/Employees");
