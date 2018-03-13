@@ -148,6 +148,7 @@ function UID(username) {
 
 //set bodyParser
 app.use(bodyParser.json());
+
 app.get('/', function(req, res) {
   res.send('Hello');
 })
@@ -209,7 +210,7 @@ app.post('/LOGIN', function (req, res) {
           console.log("employee: " + y);
         }
         else {
-          res.json({
+          res.status(400).json({
             "status": false
           });
         }
@@ -287,7 +288,7 @@ app.post('/RESET-PASSWORD', function (req, res) {
     });
   }
   else{
-    res.json({
+    res.status(400).json({
       "status": false
     });
   }
@@ -605,26 +606,44 @@ app.post('/GET-EMAIL', function (req, res) {
   //var email = revUID(uid);
 
   //create intern uid
-  if(uid.charAt(0) == '1')
-  {
+  if(uid.charAt(0) == '1') {
     read.verifyUserExists(internRef,uid, (x) =>{
-      read.getIntern(internRef, uid, (x) => {
-        console.log(x);
+      if(x)
+      {
+        read.getIntern(internRef, uid, (y) => {
+        console.log(y);
         res.json({
-          "email": x.email
+          "email": y.email,
+          "status": true
         });
       });
+    }
+    else {
+      res.json({
+        "status":false,
+        "email": null
+      });
+    }
     });
   }
-  else if(uid.charAt(0) == 2)
-  {
-    read.verifyUserExists(employeeRef,uid, (x) =>{
-      read.getIntern(internRef, uid, (x) => {
-        console.log(x);
-        res.json({
-          "email": x.email
+  else if(uid.charAt(0) == 2){
+    read.verifyUserExists(employeeRef,uid, (y) =>{
+      if(y)
+      {
+        read.getEmployee(employeeRef, uid, (x) => {
+          console.log(x);
+          res.json({
+            "email": x.email,
+            "status": true
+          });
         });
-      });
+      }
+      else {
+        res.json({
+          "status": false,
+          "email": null
+        });
+      }
     });
     }
   });
@@ -701,6 +720,11 @@ app.post('/GET-EMPLOYEE', function (req, res) {
     {
       console.log(x);
       res.send(x);
+    }
+    else {
+      res.json({
+        "status": false
+      });
     }
   });
 });
