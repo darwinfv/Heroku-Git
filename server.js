@@ -57,6 +57,7 @@ var baseRef = db.ref("/");
 var companyRef = db.ref("/Company");
 var internRef = db.ref("/User/Interns");
 var employeeRef = db.ref("/User/Employees");
+var chatroomRef = db.ref("/ChatRooms");
 
 //test-function
 function test() {
@@ -556,6 +557,49 @@ app.post('/VERIFY-USER-EXISTS', function(req,res) {
   console.log("Received request for VERIFY-USER-EXISTS:");
   console.log(req.body);
   var uid = req.body.userID;
+  if(uid.charAt(0) == '1')
+  {
+    read.verifyUserExists(internRef,uid, (x) =>{
+      if(x == true)
+      {
+        res.json({
+          "status": true
+        });
+      }
+      else {
+        {
+          res.json({
+            "status": false
+          });
+        }
+      }
+    });
+  }
+  else if(uid.charAt(0) == 2)
+  {
+    read.verifyUserExists(employeeRef,uid, (x) =>{
+      if(x == true)
+      {
+        res.json({
+          "status": true
+        });
+      }
+      else {
+        {
+          res.json({
+            "status": false
+          });
+        }
+      }
+    });
+  }
+});
+
+//check if email exists
+app.post('/VERIFY-EMAIL-EXISTS', function(req,res) {
+  console.log("Received request for VERIFY-USER-EXISTS:");
+  console.log(req.body);
+  var uid = UID(req.body.username);
   if(uid.charAt(0) == '1')
   {
     read.verifyUserExists(internRef,uid, (x) =>{
