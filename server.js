@@ -58,6 +58,10 @@ var companyRef = db.ref("/Company");
 var internRef = db.ref("/User/Interns");
 var employeeRef = db.ref("/User/Employees");
 var chatroomRef = db.ref("/ChatRooms");
+var groupChatRoomRef = db.ref("/ChatRooms/Group");
+var privateChatRoomRef = db.ref("/ChatRooms/Private");
+var locationChatRoomRef = db.ref("/ChatRooms/Location");
+var companyChatRoomRef = db.ref("/ChatRooms/Company");
 
 //test-function
 function test() {
@@ -273,17 +277,18 @@ app.post('/RESET-PASSWORD', function (req, res) {
 
   //password
   var pass = encrypt(req.body.newPassword);
+  var oldPass = encrypt(req.body.oldPassword);
 
   if(uid.charAt(0) == '1')
   {
-    create.createPassword(internRef, uid, pass);
+    update.updatePassword(internRef, uid, pass, oldPass);
     res.json({
       "status": true
     });
   }
   else if(uid.charAt(0) == '2')
   {
-    create.createPassword(employeeRef, uid, pass);
+    update.updatePassword(employeeRef, pass, oldPass);
     res.json({
       "status": true
     });
@@ -452,7 +457,7 @@ app.post('/CREATE-EMPLOYEE', function (req, res) {
   var twitter = req.body.twitter;
 
   create.createEmployee(employeeRef, companyRef, employee_uid, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter);
-
+  create.addEmployeeToCompanyChat(companyChatRoomRef, company, location, employee_uid);
   //create.createEmployee(employeeRef, employee_uid, req.body.password);
   res.json({
     "userID": employee_uid,
@@ -475,6 +480,8 @@ app.post('/CREATE-INTERN', function (req, res) {
   create.createBasicPreferences(internRef, uid, "", "", "", "", "", "");
   create.createRoommatePreferences(internRef, uid, "", "", "", "", "", "", "", "", "", "");
   create.createHousingPreferences(internRef, uid, "", "", "", "");
+  create.addToLocationChat(locationChatRoomRef, location, uid);
+  create.addInternToCompanyChat(companyChatRoomRef, company, location, uid);
   res.json({
     "status": true
   });
@@ -597,45 +604,32 @@ app.post('/VERIFY-USER-EXISTS', function(req,res) {
 
 //check if email exists
 app.post('/VERIFY-EMAIL-EXISTS', function(req,res) {
-  console.log("Received request for VERIFY-USER-EXISTS:");
+  console.log("Received request for VERIFY-EMAIL-EXISTS:");
   console.log(req.body);
   var uid = UID(req.body.username);
-  if(uid.charAt(0) == '1')
-  {
-    read.verifyUserExists(internRef,uid, (x) =>{
-      if(x == true)
-      {
-        res.json({
-          "status": true
-        });
-      }
-      else {
-        {
+  read.verifyUserExists(internRef,"1" + uid, (x) =>{
+    if(x == true) {
+      res.json({
+        "status": true,
+        "userID": "1" + uid
+      });
+    }
+    else {
+      read.verifyUserExists(employeeRef,"2" + uid, (y) =>{
+        if(y == true) {
+          res.json({
+            "userID": "2" + uid,
+            "status": true
+          });
+        }
+        else {
           res.json({
             "status": false
           });
         }
-      }
-    });
-  }
-  else if(uid.charAt(0) == 2)
-  {
-    read.verifyUserExists(employeeRef,uid, (x) =>{
-      if(x == true)
-      {
-        res.json({
-          "status": true
-        });
-      }
-      else {
-        {
-          res.json({
-            "status": false
-          });
-        }
-      }
-    });
-  }
+      });
+    }
+  });
 });
 
 //get email back from uid
@@ -800,6 +794,264 @@ app.post('/GET-MASTER-LIST', function (req, res) {
       );
     });
 
+  }
+});
+
+//get employee
+app.post('/GET-EMPLOYEE', function (req, res) {
+  console.log('Received request for /GET-EMPLOYEE:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID received:");
+  var uid = req.body.userID;
+  //uid = uid.substring(1,uid.length);
+  //var email = revUID(uid);
+
+  //create intern uid
+  read.getEmployee(employeeRef, uid, (x) => {
+    console.log(x);
+    res.send(x);
+  });
+});
+
+//get correctRef for ChatRooms
+function findCorrectRef(chatroomName) {
+  //first char
+  //1 - company
+  //2 - location
+  //3 - group
+  //4 - private
+  //get messages for a chatroom:
+  if(chatroomName.charAt(0) == '1') {
+    return companyChatRoomRef;
+  }
+  else if(chatroomName.charAt(0) == '2') {
+    return locationChatRoomRef;
+  }
+  else if(chatroomName.charAt(0) == '3') {
+    return groupChatRoomRef;
+  }
+  else if(chatroomName.charAt(0) == '4') {
+    return privateChatRoomRef;
+  }
+  else {
+    return null;
+  }
+}
+
+//get messages for chatroom name
+app.post('/GET-MESSAGES', function (req, res) {
+  console.log("Get Messages request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var correctRef = chatRoomRef;
+  var chatroomName = req.body.chatroom;
+  correctRef = findCorrectRef(chatroomName);
+  console.log("correctRef=");
+  console.log(correctRef);
+  if(correctRef == null)
+  {
+    res.status(400).json({
+      "status":false,
+      "error":"weird chat name bro"
+    });
+  }
+  else {
+    read.getMessages(correctRef, req.body.chatroom, (x) => {
+      res.send(x);
+    });
+  }
+});
+
+//compare two interns
+app.post('/COMPARE-INTERNS', function (req, res) {
+  console.log("compare interns request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var uid1 = req.body.userID1;
+  var uid2 = req.body.userID2;
+  read.compareInterns(internRef, uid1, uid2, (x) => {
+    res.json({
+      "score": x,
+      "status": true
+    });
+  });
+});
+
+//get image:
+app.post('/GET-IMAGE', function (req, res) {
+  console.log("Get Image request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  read.getImage(internRef, req.body.userID, (x) => {
+    res.send(x);
+  });
+});
+
+//create Profile Picture:
+app.post('/CREATE-PROFILE-PICTURE', function (req, res) {
+  console.log("Create Profile picture request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var image = req.body.image;
+  var uid = req.body.userID;
+  create.createProfilePicture(internRef, userID, image);
+  res.json({
+    "status": true
+  });
+});
+
+//create Group Chat:
+app.post('/CREATE-GROUP-CHAT', function (req, res) {
+  console.log("Create group request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var name = req.body.chatroomName;
+  var uid = req.body.userID;
+  create.createGroupChat(internRef, userID, name, (x) => {
+    if(x) {
+      res.json({
+        "status": true
+      });
+    }
+    else {
+      res.json({
+        "status": false,
+        "error": "database returned issue"
+      });
+    }
+  });
+});
+
+//add people to Group Chat:
+app.post('/ADD-TO-GROUP-CHAT', function (req, res) {
+  console.log("add to group request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var name = req.body.chatroomName;
+  var uid = req.body.userID;
+  create.addToGroupChat(groupChatRoomRef, internRef, uid, name);
+  res.json({
+    "status": true
+  });
+});
+
+//send messages:
+app.post('/SEND-MESSAGE', function (req, res) {
+  console.log("SEND MESSAGE request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var name = req.body.chatroomName;
+  var uid = req.body.userID;
+  var message = req.body.message;
+  var correctRef = findCorrectRef(name);
+  if(correctRef == null){
+    res.status(400).json({
+      "status": false,
+      "error": "fucked up chatroom name bro"
+    });
+  }
+  else
+  {
+    create.addMessageToChat(correctRef, name, message);
+    res.json({
+      "status": true
+    });
+  }
+});
+
+//create Private Chat:
+app.post('/CREATE-PRIVATE-CHAT', function (req, res) {
+  console.log("Create private chat request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var name = req.body.chatroomName;
+  var uid1 = req.body.userID1;
+  var uid2 = req.body.userID2;
+  create.createPrivateChat(privateChatRoomRef, internRef, uid1, uid2, name, (x) => {
+    if(x) {
+      res.json({
+        "status": true
+      });
+    }
+    else {
+      res.json({
+        "status": false,
+        "error": "database returned issue"
+      });
+    }
+  });
+});
+
+//get image:
+app.post('/GET-CHATROOM', function (req, res) {
+  console.log("Get chatroom request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  read.getChatRooms(internRef, req.body.userID, (x) => {
+    res.send(x);
+  });
+});
+
+//get USERS in chat:
+app.post('/GET-USERS-IN-CHATROOM', function (req, res) {
+  console.log("Get users in chat request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var correctRef = findCorrectRef(req.body.chatroomName);
+  if(correctRef == null){
+    res.status(400).json({
+      "status": false,
+      "error": "incorrect chatroom name bro"
+    });
+  }
+  else {
+    read.getUsersInChatRoom(internRef, req.body.chatroomName, (x) => {
+      res.send(x);
+    });
+  }
+});
+
+//get MODS in chat:
+app.post('/GET-MODS-IN-CHATROOM', function (req, res) {
+  console.log("Get users in chat request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var correctRef = findCorrectRef(req.body.chatroomName);
+  if(correctRef == null){
+    res.status(400).json({
+      "status": false,
+      "error": "incorrect chatroom name bro"
+    });
+  }
+  else {
+    read.getModsInChatRoom(internRef, req.body.chatroomName, (x) => {
+      res.send(x);
+    });
+  }
+});
+
+//remove from chat handler:
+app.post('/REMOVE-FROM-CHAT', function (req, res) {
+  console.log("remove from chat request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var name = req.body.chatroomName;
+  var uid = req.body.userID;
+  var correctRef = findCorrectRef(name);
+  if(correctRef == null){
+    res.status(400).json({
+      "status": false,
+      "error": "fucked up chatroom name bro"
+    });
+  }
+  else
+  {
+    update.removeFromChat(correctRef, internRef, name, uid);
+    res.json({
+      "status": true
+    });
   }
 });
 
