@@ -3,11 +3,11 @@ module.exports = {
   UID
 }
 //server dependencies
-var express = require('express');
-var app = express();
+const express = require('express');
+const app = express();
 var port =  (process.env.PORT || 9090);
-var axios = require('axios');
-var bodyParser = require('body-parser');
+//var axios = require('axios');
+const bodyParser = require('body-parser');
 
 //security dependencies
 var crypto = require('crypto');
@@ -20,8 +20,28 @@ var update = require('./Pair-Database-Setup/Database/update.js');
 //setting up dtaabase
 var admin = require("firebase-admin");
 
+
+
+
+
+//setting up googleStorage
+const storageRef = require('@google-cloud/storage')
+/*const storage = googleStorage({
+  projectId: "pair-ab7d0",
+  keyFilename: "./pair-ab7d0-firebase-adminsdk-3wjxh-99b0bb40ab.json"
+});
+const bucket = storage.bucket("pair-ab7d0.appspot.com/");
+*/
+
+
 //setting up CORS
 //app.use(express.methodOverride());
+
+
+
+
+
+
 // ## CORS middleware
 //
 // see: http://stackoverflow.com/questions/7067966/how-to-allow-cors-in-express-nodejs
@@ -54,6 +74,7 @@ admin.initializeApp({
 var db = admin.database();
 var baseRef = db.ref("/");
 
+//set up references
 var companyRef = db.ref("/Company");
 var internRef = db.ref("/User/Interns");
 var employeeRef = db.ref("/User/Employees");
@@ -278,26 +299,84 @@ app.post('/RESET-PASSWORD', function (req, res) {
   //password
   var pass = encrypt(req.body.newPassword);
   var oldPass = encrypt(req.body.oldPassword);
+  console.log(oldPass);
 
-  if(uid.charAt(0) == '1')
-  {
-    update.updatePassword(internRef, uid, pass, oldPass);
-    res.json({
-      "status": true
+  if(uid.charAt(0) == '1') {
+    update.updatePassword(internRef, uid, pass, oldPass, (x) => {
+      if (x == true) {
+        res.json({
+          "status": true
+        });
+      }
+      else {
+        res.status(400).json({
+          "status": false,
+          "error": "wrong password"
+        });
+      }
     });
   }
-  else if(uid.charAt(0) == '2')
-  {
-    update.updatePassword(employeeRef, pass, oldPass);
-    res.json({
-      "status": true
+  else if(uid.charAt(0) == '2') {
+    update.updatePassword(employeeRef, uid, pass, oldPass, (x) => {
+      if (x == true) {
+        res.json({
+          "status": true
+        });
+      }
+      else {
+        res.status(400).json({
+          "status": false,
+          "error": "wrong password"
+        });
+      }
     });
   }
   else{
     res.status(400).json({
-      "status": false
+      "status": false,
+      "error": "user does not exist in database"
     });
   }
+});
+
+//FORGOT password handler
+app.post('/FORGOT-PASSWORD', function (req, res) {
+  console.log('Received request for RESET-PASSWORD:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  console.log("UID received:");
+  var uid = UID(req.body.username);
+  console.log(uid);
+
+  //password
+  var pass = encrypt(req.body.password);
+
+  read.verifyUserExists(internRef,"1" + uid, (x) =>{
+    if(x == true) {
+      create.createPassword(internRef, "1" + uid, pass);
+      res.json({
+        "status": true,
+        "userID": "1" + uid
+      });
+    }
+    else {
+      read.verifyUserExists(employeeRef,"2" + uid, (y) =>{
+        if(y == true) {
+          create.createPassword(employeeRef, "2" + uid, pass);
+          res.json({
+            "userID": "2" + uid,
+            "status": true
+          });
+        }
+        else {
+          res.status(400).json({
+            "status": false
+          });
+        }
+      });
+    }
+  });
 });
 
 //initial set password for employee
@@ -482,6 +561,21 @@ app.post('/CREATE-INTERN', function (req, res) {
   create.createHousingPreferences(internRef, uid, "", "", "", "");
   create.addToLocationChat(locationChatRoomRef, location, uid);
   create.addInternToCompanyChat(companyChatRoomRef, company, location, uid);
+  res.json({
+    "status": true
+  });
+});
+
+//initial create company
+app.post('/CREATE-COMPANY', function (req, res) {
+  console.log('Received request for CREATE-COMPANY:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  var name = req.body.companyName;
+  var listOfLocations = req.body.locations;
+  var listOfEmployees = req.body.employees;
+  create.createCompany(companyRef, name, listOfLocations, listOfEmployees);
   res.json({
     "status": true
   });
@@ -895,8 +989,8 @@ app.post('/CREATE-PROFILE-PICTURE', function (req, res) {
   console.log(req.body);
   console.log("Done printing out request");
   var image = req.body.image;
-  var uid = req.body.userID;
-  create.createProfilePicture(internRef, userID, image);
+  var userID = req.body.userID;
+  create.createProfilePicture(storageRef,internRef, userID, image);
   res.json({
     "status": true
   });
@@ -1053,6 +1147,30 @@ app.post('/REMOVE-FROM-CHAT', function (req, res) {
       "status": true
     });
   }
+});
+
+//ban from chat handler:
+app.post('BAN-INTERN', function (req, res) {
+  console.log("ban intern request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var uid = req.body.userID;
+  update.banIntern(internRef, uid);
+  res.json({
+    "status": true
+  });
+});
+
+//unban from chat handler:
+app.post('UNBAN-INTERN', function (req, res) {
+  console.log("unban intern request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  var uid = req.body.userID;
+  update.unbanIntern(internRef, uid);
+  res.json({
+    "status": true
+  });
 });
 
 //actual main function
