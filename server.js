@@ -36,12 +36,6 @@ const bucket = storage.bucket("pair-ab7d0.appspot.com/");
 
 //setting up CORS
 //app.use(express.methodOverride());
-
-
-
-
-
-
 // ## CORS middleware
 //
 // see: http://stackoverflow.com/questions/7067966/how-to-allow-cors-in-express-nodejs
@@ -939,11 +933,11 @@ app.post('/GET-MESSAGES', function (req, res) {
   console.log("Get Messages request received");
   console.log(req.body);
   console.log("Done printing out request");
-  var correctRef = chatRoomRef;
-  var chatroomName = req.body.chatroom;
+  //var correctRef = chatRoomRef;
+  var chatroomName = req.body.chatroomName;
   correctRef = findCorrectRef(chatroomName);
-  console.log("correctRef=");
-  console.log(correctRef);
+  //console.log("correctRef=");
+  //console.log(correctRef);
   if(correctRef == null)
   {
     res.status(400).json({
@@ -952,7 +946,7 @@ app.post('/GET-MESSAGES', function (req, res) {
     });
   }
   else {
-    read.getMessages(correctRef, req.body.chatroom, (x) => {
+    read.getMessages(correctRef, req.body.chatroomName, (x) => {
       res.send(x);
     });
   }
@@ -1003,7 +997,7 @@ app.post('/CREATE-GROUP-CHAT', function (req, res) {
   console.log("Done printing out request");
   var name = req.body.chatroomName;
   var uid = req.body.userID;
-  create.createGroupChat(internRef, userID, name, (x) => {
+  create.createGroupChat(groupChatRoomRef, internRef, uid, name, (x) => {
     if(x) {
       res.json({
         "status": true
@@ -1043,15 +1037,36 @@ app.post('/SEND-MESSAGE', function (req, res) {
   if(correctRef == null){
     res.status(400).json({
       "status": false,
-      "error": "fucked up chatroom name bro"
+      "error": "chatroom name is incorrect"
     });
   }
-  else
-  {
-    create.addMessageToChat(correctRef, name, message);
-    res.json({
-      "status": true
-    });
+  else {
+    if(uid.charAt(0) == '1') {
+      read.getIntern(internRef, uid, (x) =>{
+        console.log("printing out intern");
+        console.log(x);
+        message = x.firstName + " " + x.lastName + ":" + message;
+        create.addMessageToChat(correctRef, name, message);
+        res.json({
+          "status": true
+        });
+      });
+    }
+    else if(uid.charAt(0) == '2') {
+      read.getEmployee(employeeRef, uid, (x) =>{
+        message = x.firstName + " " + x.lastName + ":" + message;
+        create.addMessageToChat(correctRef, name, message);
+        res.json({
+          "status": true
+        });
+      });
+    }
+    else {
+      res.json({
+        "status": false,
+        "error": "incorrect userID"
+      });
+    }
   }
 });
 
