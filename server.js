@@ -402,18 +402,9 @@ app.post('/REMOVE-USER', function (req, res) {
   var uid = req.body.userID;
   console.log(uid);
 
-  update.removeIntern(internRef, uid, (x) => {
-    if (x != false)
-    {
-      res.json({
-        "status": true
-      });
-    }
-    else {
-      res.json({
-        "status": false
-      });
-    }
+  update.removeIntern(internRef, uid);
+  res.json({
+    "status": true
   });
 });
 
