@@ -403,6 +403,7 @@ app.post('/REMOVE-USER', function (req, res) {
   console.log(uid);
 
   update.removeIntern(internRef, uid);
+  update.removeIntern(employeeRef, uid);
   res.json({
     "status": true
   });
