@@ -126,7 +126,7 @@ function createProfilePicture(storageRef,internRef, ID, image) {
 	/        them to the area/city chat room
 */
 
-function addToLocationChat(lcoationChatRoomRef, location, user) {
+function addToLocationChat(locationChatRoomRef, location, user) {
 	update.getSnapshot(locationChatRoomRef, 2 + location, "listOfUsers", user);
 }
 
