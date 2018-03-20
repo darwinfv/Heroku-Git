@@ -230,7 +230,7 @@ app.post('/LOGIN', function (req, res) {
           console.log("employee: " + y);
         }
         else {
-          res.status(400).json({
+          res.json({
             "status": false
           });
         }
@@ -303,7 +303,7 @@ app.post('/RESET-PASSWORD', function (req, res) {
         });
       }
       else {
-        res.status(400).json({
+        res.json({
           "status": false,
           "error": "wrong password"
         });
@@ -318,7 +318,7 @@ app.post('/RESET-PASSWORD', function (req, res) {
         });
       }
       else {
-        res.status(400).json({
+        res.json({
           "status": false,
           "error": "wrong password"
         });
@@ -326,7 +326,7 @@ app.post('/RESET-PASSWORD', function (req, res) {
     });
   }
   else{
-    res.status(400).json({
+    res.json({
       "status": false,
       "error": "user does not exist in database"
     });
@@ -364,7 +364,7 @@ app.post('/FORGOT-PASSWORD', function (req, res) {
           });
         }
         else {
-          res.status(400).json({
+          res.json({
             "status": false
           });
         }
@@ -932,7 +932,7 @@ app.post('/GET-MESSAGES', function (req, res) {
   //console.log(correctRef);
   if(correctRef == null)
   {
-    res.status(400).json({
+    res.json({
       "status":false,
       "error":"weird chat name bro"
     });
@@ -1027,7 +1027,7 @@ app.post('/SEND-MESSAGE', function (req, res) {
   var message = req.body.message;
   var correctRef = findCorrectRef(name);
   if(correctRef == null){
-    res.status(400).json({
+    res.json({
       "status": false,
       "error": "chatroom name is incorrect"
     });
@@ -1102,7 +1102,7 @@ app.post('/GET-USERS-IN-CHATROOM', function (req, res) {
   console.log("Done printing out request");
   var correctRef = findCorrectRef(req.body.chatroomName);
   if(correctRef == null){
-    res.status(400).json({
+    res.json({
       "status": false,
       "error": "incorrect chatroom name bro"
     });
@@ -1121,7 +1121,7 @@ app.post('/GET-MODS-IN-CHATROOM', function (req, res) {
   console.log("Done printing out request");
   var correctRef = findCorrectRef(req.body.chatroomName);
   if(correctRef == null){
-    res.status(400).json({
+    res.json({
       "status": false,
       "error": "incorrect chatroom name bro"
     });
@@ -1142,7 +1142,7 @@ app.post('/REMOVE-FROM-CHAT', function (req, res) {
   var uid = req.body.userID;
   var correctRef = findCorrectRef(name);
   if(correctRef == null){
-    res.status(400).json({
+    res.json({
       "status": false,
       "error": "fucked up chatroom name bro"
     });
@@ -1196,7 +1196,7 @@ app.listen(port, function () {
 //error handler
 app.use(function (err, req, res, next) {
   console.error(err);
-  res.status(500).send({
+  res.json({
     "status": false,
     "error": 'Something failed, plz check server for more details',
     "details": err
