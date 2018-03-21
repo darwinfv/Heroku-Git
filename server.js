@@ -1108,7 +1108,7 @@ app.post('/GET-USERS-IN-CHATROOM', function (req, res) {
     });
   }
   else {
-    read.getUsersInChatRoom(internRef, req.body.chatroomName, (x) => {
+    read.getUsersInChatRoom(correctRef, req.body.chatroomName, (x) => {
       res.send(x);
     });
   }
