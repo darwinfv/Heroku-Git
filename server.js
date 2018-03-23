@@ -1025,6 +1025,7 @@ app.post('/SEND-MESSAGE', function (req, res) {
   var name = req.body.chatroomName;
   var uid = req.body.userID;
   var message = req.body.message;
+  var image = req.body.image;
   var correctRef = findCorrectRef(name);
   if(correctRef == null){
     res.json({
@@ -1037,7 +1038,7 @@ app.post('/SEND-MESSAGE', function (req, res) {
       read.getIntern(internRef, uid, (x) =>{
         console.log("printing out intern");
         console.log(x);
-        message = x.firstName + " " + x.lastName + ":" + message;
+        message = uid + ":" + x.firstName + " " + x.lastName + ":" +image + ":" + message;
         create.addMessageToChat(correctRef, name, message);
         res.json({
           "status": true
