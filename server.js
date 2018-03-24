@@ -1230,7 +1230,7 @@ app.post('/UPDATE-COMPANY', function (req, res) {
   var name = req.body.companyName;
   var listOfLocations = req.body.locations;
   var listOfEmployees = req.body.employees;
-  create.createCompany(companyRef, name, listOfEmployees, listOfLocations;
+  update.updateCompany(companyRef, name, listOfEmployees, listOfLocations);
   res.json({
     "status": true
   });
