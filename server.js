@@ -1169,7 +1169,7 @@ app.post('/REMOVE-FROM-CHAT', function (req, res) {
 });
 
 //ban from chat handler:
-app.post('BAN-INTERN', function (req, res) {
+app.post('/BAN-INTERN', function (req, res) {
   console.log("ban intern request received");
   console.log(req.body);
   console.log("Done printing out request");
@@ -1181,7 +1181,7 @@ app.post('BAN-INTERN', function (req, res) {
 });
 
 //unban from chat handler:
-app.post('UNBAN-INTERN', function (req, res) {
+app.post('/UNBAN-INTERN', function (req, res) {
   console.log("unban intern request received");
   console.log(req.body);
   console.log("Done printing out request");
