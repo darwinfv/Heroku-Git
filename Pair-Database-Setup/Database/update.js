@@ -6,22 +6,15 @@
       updateIntern,
       updatePassword,
       removeIntern,
+      removeEmployee,
       removeFromChat,
-			banIntern,
-			unbanIntern
+      banIntern,
+      unbanIntern,
+      removeComplaint
   }
 
-var update = require("./update.js")
-/*
-  / @brief this function retrieves the already existent
-  /        items from a list and adds the new ones to it
-  /        can be used to update lists and arrays
-  /
-  / @param relevantRef a reference to the appropriate object header
-  / @param childName the name of the object you want to update
-  / @param itemName the item you want to update
-  / @param newValue the values you want to add
-*/
+const update = require('./update.js');
+
   function getSnapshot(relevantRef, childName, itemName, newValue) {
     var ref = relevantRef.child(childName).child(itemName);
     var oldlist = [];
@@ -103,13 +96,53 @@ var update = require("./update.js")
           }
       else {
         callback(false);
-      }
+          }
     });
   }
 
-  function removeIntern(internRef, ID) {
-  	internRef.child(ID).remove();
-      return true;
+  function removeIntern(internRef, chatRoomRef, ID) {
+    internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+              var ref;
+              if(childSnapshot.val()[0] == 1)
+                  ref = chatRoomRef.child("Company");
+              else if(childSnapshot.val()[0] == 2)
+                  ref = chatRoomRef.child("Location");
+              else if(childSnapshot.val()[0] == 3)
+                  ref = chatRoomRef.child("Group");
+              else if(childSnapshot.val()[0] == 4)
+                  ref = chatRoomRef.child("Private");
+              ref.child(childSnapshot.val()).child("listOfUsers").once("value").then(function(babySnapshot) {
+                  var i = 0;
+                  babySnapshot.forEach(function(infantSnapshot) {
+                      i++;
+                      if(infantSnapshot.val()[0] == ID[0] && infantSnapshot.val()[1] == ID[1] && infantSnapshot.val()[2] == ID[2] && infantSnapshot.val()[3] == ID[3]) {
+                          ref.child(childSnapshot.val()).child("listOfUsers").child(infantSnapshot.key).remove();
+                      }
+                  });
+                  if(i <= 1) {
+                      ref.child(childSnapshot.val()).remove();
+                  }
+                  internRef.child(ID).remove();
+              });
+          });
+      });
+  }
+
+  function removeEmployee(employeeRef, chatRoomRef, companyRef, ID) {
+      employeeRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+              var ref = chatRoomRef.child("Company");
+              ref.child(childSnapshot.val()).child("listOfMods").once("value").then(function(babySnapshot) {
+                  babySnapshot.forEach(function(infantSnapshot) {
+                      if(infantSnapshot.val()[0] == ID[0] && infantSnapshot.val()[1] == ID[1] && infantSnapshot.val()[2] == ID[2] && infantSnapshot.val()[3] == ID[3]) {
+                          ref.child(childSnapshot.val()).child("listOfMods").child(infantSnapshot.key).remove();
+                      }
+                  });
+                  employeeRef.child(ID).remove();
+              });
+          });
+      });
   }
 
   function removeFromChat(chatRoomRef, internRef, name, ID) {
@@ -131,21 +164,24 @@ var update = require("./update.js")
       });
   }
 
-  function updateImage(internRef, ID, base64image) {
-    //internRef.child(ID).putString(base64image, 'data_url');
-    internRef.child(ID).update({
-      "image": base64image
-    });
+  function banIntern(internRef, ID) {
+      internRef.child(ID).update({
+          "ban": true
+      });
   }
 
-	function banIntern(internRef, ID) {
-        internRef.child(ID).child("listOfChatRooms").update({
-            "ban": true
-        });
-    }
+  function unbanIntern(internRef, ID) {
+      internRef.child(ID).update({
+          "ban": false
+      });
+  }
 
-	function unbanIntern(internRef, ID) {
-        internRef.child(ID).child("listOfChatRooms").update({
-            "ban": false
-        });
-    }
+  function removeComplaint(employeeRef, ID, message) {
+      employeeRef.child(ID).child("listOfComplaints").once("value").then(function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+              if(childSnapshot.val() == message) {
+                  employeeRef.child(ID).child("listOfComplaints").child(childSnapshot.key).remove();
+              }
+          });
+      });
+  }
