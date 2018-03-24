@@ -1103,6 +1103,7 @@ app.post('/GET-CHATROOM', function (req, res) {
   else {
     read.getChatRooms(employeeRef, req.body.userID, (x) => {
       res.send(x);
+    });
   }
 });
 
