@@ -20,10 +20,6 @@ var update = require('./Pair-Database-Setup/Database/update.js');
 //setting up dtaabase
 var admin = require("firebase-admin");
 
-
-
-
-
 //setting up googleStorage
 const storageRef = require('@google-cloud/storage')
 /*const storage = googleStorage({
@@ -178,8 +174,6 @@ app.post('/LOGIN', function (req, res) {
   console.log('Received request for LOGIN:');
   console.log(req.body);
 
-  //verify the values:
-  //send UID and ENCRYPTED PASSWORD to verify
   //create ENCRYPTED PASSWORD
   var pass_shasum = encrypt(req.body.password);//crypto.createHash('sha256').update(req.body.password).digest('hex');
 
@@ -204,42 +198,49 @@ app.post('/LOGIN', function (req, res) {
   console.log("UID FOR EMPLOYEE");
   console.log(actual_uid_employee);
 
-  //check and return
-  read.verifyUser(internRef, actual_uid_intern, pass_shasum, (x) => {
-    //make the login token
-    if (x == true)
-    {
+  read.verifyCompany(companyRef, username, pass_shasum, (z) => {
+    if(z != false) {
       res.json({
-        "userID": actual_uid_intern,
+        "userID" : z,
         "status": true,
-        "authority": "intern"
+        "authority": "company"
       });
-      console.log("intern: " + x);
     }
-    else
-    {
-      read.verifyUser(employeeRef, actual_uid_employee, pass_shasum, (y) => {
+    else {
+      //check and return
+      read.verifyUser(internRef, actual_uid_intern, pass_shasum, (x) => {
         //make the login token
-        if (y == true)
-        {
+        if (x == true) {
           res.json({
-            "userID": actual_uid_employee,
+            "userID": actual_uid_intern,
             "status": true,
-            "authority": "employee"
+            "authority": "intern"
           });
-          console.log("employee: " + y);
+          console.log("intern: " + x);
         }
         else {
-          res.json({
-            "status": false
+          read.verifyUser(employeeRef, actual_uid_employee, pass_shasum, (y) => {
+            //make the login token
+            if (y == true) {
+              res.json({
+                "userID": actual_uid_employee,
+                "status": true,
+                "authority": "employee"
+              });
+              console.log("employee: " + y);
+            }
+            else {
+              res.json({
+                "status": false
+              });
+            }
           });
         }
       });
     }
   });
-
-  //return null
-  console.log('Done handling login');
+//return null
+console.log('Done handling login');
 });
 
 //intial set password request handler for intern
@@ -402,8 +403,8 @@ app.post('/REMOVE-USER', function (req, res) {
   var uid = req.body.userID;
   console.log(uid);
 
-  update.removeIntern(internRef, uid);
-  update.removeIntern(employeeRef, uid);
+  update.removeIntern(internRef, chatRoomRef, uid);
+  update.removeEmployee(employeeRef, chatRoomRef, companyRef, uid);
   res.json({
     "status": true
   });
@@ -415,11 +416,11 @@ app.post('/GET-COMPANY', function (req, res) {
   console.log(req.body);
 
   //create UID (0 for interns)
-  console.log("UID generated:");
-  var pin = req.body.pid;
+  console.log("PID generated:");
+  var pin = encrypt(req.body.pid);
   console.log(pin);
 
-  read.getCompany(companyRef, pin, (x) => {
+  read.getCompanyFromPin(companyRef, pin, (x) => {
     if (x != null) {
         x['status'] = 'true';
         console.log(x);
@@ -522,7 +523,7 @@ app.post('/CREATE-EMPLOYEE', function (req, res) {
   var twitter = req.body.twitter;
 
   create.createEmployee(employeeRef, companyRef, employee_uid, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter);
-  create.addEmployeeToCompanyChat(companyChatRoomRef, company, location, employee_uid);
+  create.addEmployeeToCompanyChat(companyChatRoomRef,employeeRef, company, location, employee_uid);
   //create.createEmployee(employeeRef, employee_uid, req.body.password);
   res.json({
     "userID": employee_uid,
@@ -545,8 +546,8 @@ app.post('/CREATE-INTERN', function (req, res) {
   create.createBasicPreferences(internRef, uid, "", "", "", "", "", "");
   create.createRoommatePreferences(internRef, uid, "", "", "", "", "", "", "", "", "", "");
   create.createHousingPreferences(internRef, uid, "", "", "", "");
-  create.addToLocationChat(locationChatRoomRef, location, uid);
-  create.addInternToCompanyChat(companyChatRoomRef, company, location, uid);
+  create.addToLocationChat(locationChatRoomRef, internRef, location, uid);
+  create.addInternToCompanyChat(companyChatRoomRef,internRef, company, location, uid);
   res.json({
     "status": true
   });
@@ -561,7 +562,9 @@ app.post('/CREATE-COMPANY', function (req, res) {
   var name = req.body.companyName;
   var listOfLocations = req.body.locations;
   var listOfEmployees = req.body.employees;
-  create.createCompany(companyRef, name, listOfLocations, listOfEmployees);
+  var email = req.body.email;
+  var password = encrypt(req.body.password);
+  create.createCompany(companyRef, name, email, password, listOfLocations, listOfEmployees);
   res.json({
     "status": true
   });
@@ -1179,6 +1182,43 @@ app.post('UNBAN-INTERN', function (req, res) {
   res.json({
     "status": true
   });
+});
+
+//get company from name
+app.post('/GET-COMPANY-FROM-NAME', function (req,res) {
+  console.log("recevied request for get company from name");
+  console.log(req.body);
+  var name = req.body.name;
+  read.getCompanyFromName(companyRef, name, (x) => {
+    res.send(x);
+  })
+})
+
+//create complaint
+app.post('/CREATE-COMPLAINT', function(req,res) {
+  console.log('Request for create complaint recevied');
+  console.log(req.body);
+  var id = req.body.modID;
+  var id2 = req.body.userID;
+  var complaint = req.body.complaint;
+  var from = req.body.from;
+  var to = req.body.to;
+  create.createComplaint(employeeRef, id, complaint, to, from, id2)
+  res.json({
+    "status": true
+  })
+});
+
+//remove complaint
+app.post('/REMOVE-COMPLAINT', function(req,res) {
+  console.log('Request for create complaint recevied');
+  console.log(req.body);
+  var id = req.body.userID;
+  var complaint = req.body.complaint;
+  update.removeComplaint(employeeRef, id, complaint);
+  res.json({
+    "status": true
+  })
 });
 
 //actual main function
