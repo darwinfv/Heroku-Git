@@ -198,7 +198,7 @@ app.post('/LOGIN', function (req, res) {
   console.log("UID FOR EMPLOYEE");
   console.log(actual_uid_employee);
 
-  read.verifyCompany(companyRef, username, pass_shasum, (z) => {
+  read.verifyCompany(companyRef, req.body.username, pass_shasum, (z) => {
     if(z != false) {
       res.json({
         "userID" : z,
