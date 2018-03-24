@@ -1050,7 +1050,7 @@ app.post('/SEND-MESSAGE', function (req, res) {
     }
     else if(uid.charAt(0) == '2') {
       read.getEmployee(employeeRef, uid, (x) =>{
-        message = x.firstName + " " + x.lastName + ":" + message;
+        message = uid + ":" + x.firstName + " " + x.lastName + ":" +image + ":" + message;
         create.addMessageToChat(correctRef, name, message);
         res.json({
           "status": true
