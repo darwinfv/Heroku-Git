@@ -239,8 +239,8 @@ app.post('/LOGIN', function (req, res) {
       });
     }
   });
-//return null
-console.log('Done handling login');
+  //return null
+  console.log('Done handling login');
 });
 
 //intial set password request handler for intern
@@ -1219,6 +1219,21 @@ app.post('/REMOVE-COMPLAINT', function(req,res) {
   res.json({
     "status": true
   })
+});
+
+//update company
+app.post('/UPDATE-COMPANY', function (req, res) {
+  console.log('Received request for UPDATE-COMPANY:');
+  console.log(req.body);
+
+  //create UID (0 for interns)
+  var name = req.body.companyName;
+  var listOfLocations = req.body.locations;
+  var listOfEmployees = req.body.employees;
+  create.createCompany(companyRef, name, listOfEmployees, listOfLocations;
+  res.json({
+    "status": true
+  });
 });
 
 //actual main function
