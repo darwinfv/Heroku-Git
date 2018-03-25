@@ -198,7 +198,7 @@ app.post('/LOGIN', function (req, res) {
   console.log("UID FOR EMPLOYEE");
   console.log(actual_uid_employee);
 
-  if(req.body.username == 'admin@pair.com' && req.password == 'password') {
+  if(req.body.username == 'admin@pair.com' && req.body.password == 'password') {
     res.json({
       "status": true,
       "userID": 4000,
@@ -1061,7 +1061,7 @@ app.post('/SEND-MESSAGE', function (req, res) {
     }
     else if(uid.charAt(0) == '2') {
       read.getEmployee(employeeRef, uid, (x) =>{
-        message = uid + "$:$" + x.firstName + " " + x.lastName + "$:$" +image + "$:$" + message;
+        message = uid + "$:$" + x.firstName + " " + x.lastName + "$:$" + image + "$:$" + message;
         create.addMessageToChat(correctRef, name, message);
         res.json({
           "status": true
