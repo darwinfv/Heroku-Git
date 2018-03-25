@@ -1151,7 +1151,7 @@ app.post('/GET-MODS-IN-CHATROOM', function (req, res) {
     });
   }
   else {
-    read.getModsInChatRoom(internRef, req.body.chatroomName, (x) => {
+    read.getModsInChatRoom(correctRef, req.body.chatroomName, (x) => {
       res.send(x);
     });
   }
@@ -1270,6 +1270,7 @@ app.post('/GET-MASTER-LIST-COMPANY', function (req, res) {
 
 //get intern
 app.post('/GET-ADMIN', function(req, res) {
+  console.log("get admin received");
   read.getAdmin(adminRef, (x) => {
     res.send(x);
   });
