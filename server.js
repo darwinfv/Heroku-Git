@@ -428,11 +428,11 @@ app.post('/GET-COMPANY', function (req, res) {
 
   //create UID (0 for interns)
   console.log("PID generated:");
-  var pin = encrypt(req.body.pid);
+  var pin = req.body.pid;
   console.log(pin);
 
   read.getCompanyFromPin(companyRef, pin, (x) => {
-    if (x != null) {
+    if (!isEmptyObject(x)) {
         x['status'] = 'true';
         console.log(x);
         //var y = x.splice(1);
@@ -1266,6 +1266,11 @@ app.post('/GET-MASTER-LIST-COMPANY', function (req, res) {
     res.send(y);
   });
 });
+
+//empty jsons
+function isEmptyObject(obj) {
+  return !Object.keys(obj).length;
+}
 
 //actual main function
 app.listen(port, function () {
