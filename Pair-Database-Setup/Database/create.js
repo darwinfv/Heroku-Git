@@ -64,6 +64,9 @@ function createIntern(internRef, id, email, company, location = "novalue") {
 			"listOfChatRooms": [1 + company + ", " + location]
 		});
 		update.updateCompany(companyRef, company, firstName + " " + lastName);
+    internRef.child(id).child("images").update({
+	    	"image": "undefined"
+	    });
 	}
 
 	function createPassword(relevantRef, ID, password) {

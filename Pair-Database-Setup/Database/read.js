@@ -17,7 +17,8 @@
 		getModsInChatRoom,
 		compareTwoInterns,
 		compareInterns,
-		getImage
+		getImage,
+    getAdmin
 	}
 
 	const read = require('./read.js');
@@ -329,5 +330,13 @@
 	function getImage(relevantRef, ID, callback) {
 		relevantRef.child(ID).child("images").once("value").then(function(snapshot) {
 			callback(snapshot.val());
+		});
+	}
+
+  function getAdmin(adminRef, callback) {
+		var list = {};
+		adminRef.child(4000).child("listOfComplaints").once("value").then(function(snapshot) {
+			list = snapshot.val();
+			callback(list);
 		});
 	}
