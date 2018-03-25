@@ -1276,6 +1276,16 @@ app.post('/GET-ADMIN', function(req, res) {
   });
 });
 
+//remove complaint admin
+app.post('/REMOVE-COMPLAINT-ADMIN', function(req, res) {
+  console.log("remove complaint admin received");
+  var complaint = req.body.complaint;
+  update.removeComplaint(adminRef, 4000, complaint);
+  res.json({
+    "status": true
+  })
+});
+
 //empty jsons
 function isEmptyObject(obj) {
   return !Object.keys(obj).length;
