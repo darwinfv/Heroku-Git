@@ -73,6 +73,7 @@ var groupChatRoomRef = db.ref("/ChatRooms/Group");
 var privateChatRoomRef = db.ref("/ChatRooms/Private");
 var locationChatRoomRef = db.ref("/ChatRooms/Location");
 var companyChatRoomRef = db.ref("/ChatRooms/Company");
+var adminRef = db.ref("/Admin");
 
 //test-function
 function test() {
@@ -202,7 +203,7 @@ app.post('/LOGIN', function (req, res) {
     res.json({
       "status": true,
       "userID": 4000,
-      "authority": "Admin",
+      "authority": "admin",
       "firstName": "Darwin",
       "lastName": "Vaz"
     })
@@ -1264,6 +1265,13 @@ app.post('/GET-MASTER-LIST-COMPANY', function (req, res) {
     console.log(y);
     console.log("Master list printed");
     res.send(y);
+  });
+});
+
+//get intern
+app.post('/GET-ADMIN', function(req, res) {
+  read.getAdmin(adminRef, (x) => {
+    res.send(x);
   });
 });
 
