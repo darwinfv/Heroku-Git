@@ -98,7 +98,7 @@ const update = require('./update.js');
         callback(false);
           }
     });
-  }
+  } 
 
   function removeIntern(internRef, chatRoomRef, ID) {
     internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
