@@ -46,6 +46,9 @@ function createIntern(internRef, id, email, company, location = "novalue") {
 			"listOfChatRooms": [2 + location, 1 + company + ", " + location],
 			"ban": false
 		});
+    internRef.child(id).child("images").update({
+	    	"image": "undefined"
+	   });
 	}
 
 	function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
