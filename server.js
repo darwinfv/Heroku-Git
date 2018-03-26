@@ -793,10 +793,17 @@ app.post('/GET-INTERN', function (req, res) {
   //var email = revUID(uid);
 
   //create intern uid
-  read.getIntern(internRef, uid, (x) => {
-    console.log(x);
-    res.send(x);
-  });
+  if(uid.charAt(0) == '1') {
+    read.getIntern(internRef, uid, (x) => {
+      console.log(x);
+      res.send(x);
+    });
+  }
+  else {
+    res.json({
+      "status": false
+    })
+  }
 });
 
 //forgot password for employee
