@@ -87,7 +87,7 @@ function test() {
   create.createBasicPreferences(internRef,"1" + UID("darwin@gmail.com"), "Darwin", "Vaz", "yeah, cool description", "dv@fb.com", "dv@t.com", "dv@linked.in");
 
   //create basic employee
-  create.createEmployee(employeeRef, companyRef,"2" + UID("hiten@gmail.com"), "hiten", "rathod", pass_shasum, "hiten@gmail.com", "Goggle", "San Fran", "bio, gotta be fast like Sanic", "hiten@fb.com", "hiten@linkedin.com", "");
+  create.createEmployee(employeeRef, companyRef,"2" + UID("hiten@gmail.com"), "hiten", "rathod", pass_shasum, "hiten@gmail.com", "Goggle", "San Fran", "bio, gotta be fast like Sanic", "hiten@fb.com", "hiten@linkedin.com", "undefined");
 
   //create a psuedo intern
   create.createIntern(internRef, "1" + UID("arvindh@gmail.com"), "arvindh@gmail.com", "Carrot", "novalue");
@@ -555,9 +555,9 @@ app.post('/CREATE-INTERN', function (req, res) {
   var location = req.body.location;
   var company = req.body.company;
   create.createIntern(internRef, uid, req.body.username, company, location);
-  create.createBasicPreferences(internRef, uid, "", "", "", "", "", "");
-  create.createRoommatePreferences(internRef, uid, "", "", "", "", "", "", "", "", "", "");
-  create.createHousingPreferences(internRef, uid, "", "", "", "");
+  create.createBasicPreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined", "undefined", "undefined");
+  create.createRoommatePreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined");
+  create.createHousingPreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined");
   create.addToLocationChat(locationChatRoomRef, internRef, location, uid);
   create.addInternToCompanyChat(companyChatRoomRef,internRef, company, location, uid);
   res.json({
@@ -1223,10 +1223,18 @@ app.post('/CREATE-COMPLAINT', function(req,res) {
   var complaint = req.body.complaint;
   var from = req.body.from;
   var to = req.body.to;
-  create.createComplaint(employeeRef, id, complaint, to, from, id2)
-  res.json({
-    "status": true
-  })
+  if(modID.charAt(0) == '4') {
+    create.createComplaint(adminRef, id, complaint, to, from, id2)
+    res.json({
+      "status": true
+    });
+  }
+  else {
+    create.createComplaint(employeeRef, id, complaint, to, from, id2)
+    res.json({
+      "status": true
+    });
+  }
 });
 
 //remove complaint
