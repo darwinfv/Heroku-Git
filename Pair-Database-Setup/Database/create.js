@@ -31,12 +31,12 @@ function createCompany(companyRef, companyName, email, password, listOfLocations
       "pin": pin,
       "email": email,
       "password": password,
-      "listOfLocations": listOfLocations,
-      "listOfEmployees": listOfEmployees
+      "listOfLocations": [listOfLocations],
+      "listOfEmployees": [listOfEmployees]
     });
   }
 
-  function createIntern(internRef, id, email, company, location = "novalue") {
+function createIntern(internRef, id, email, company, location = "novalue") {
     internRef.update({
       [id]:"novalue"
     });
@@ -52,7 +52,7 @@ function createCompany(companyRef, companyName, email, password, listOfLocations
     });
   }
 
-  function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
+function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
     employeeRef.update({
       [id]:"novalue"
     });
@@ -73,7 +73,7 @@ function createCompany(companyRef, companyName, email, password, listOfLocations
     update.updateCompany(companyRef, company, firstName + " " + lastName);
   }
 
-  function createPassword(relevantRef, ID, password) {
+function createPassword(relevantRef, ID, password) {
     relevantRef.child(ID).update({
       "password": password
     });

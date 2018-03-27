@@ -16,7 +16,7 @@
       acceptInvite
   }
 
-   var update = ('./update.js');
+   var update = require('./update.js');
 
 /*
   / @brief this function retrieves the already existent
@@ -44,6 +44,9 @@
   }
 
   function updateCompany(companyRef, companyName, employees, locations = []) {
+    console.log(employees);
+    console.log(locations);
+    console.log();
     update.getSnapshot(companyRef, companyName, "listOfLocations", locations);
     update.getSnapshot(companyRef, companyName, "listOfEmployees", employees);
   };

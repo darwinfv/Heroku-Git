@@ -299,6 +299,15 @@
          });
          callback(flag);
       });
+    } else if(ID.charAt(0) == '2' && name.charAt(0) == '4'){
+      relevantRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
+			     snapshot.forEach(function(childSnapshot) {
+             if(childSnapshot.val().startsWith(ID)) {
+               flag = true;
+             }
+         });
+         callback(flag);
+      });
     }
     else {
       callback(false);
