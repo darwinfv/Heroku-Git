@@ -18,10 +18,10 @@
 		compareTwoInterns,
 		compareInterns,
 		getImage,
-    getAdmin
+		getAdmin,
+		getInvite,
+    verifyUserChatroom
 	}
-
-	const read = require('./read.js');
 
 	function getMasterListOfInterns(internRef, company, callback) {
 		var master = {};
@@ -260,9 +260,9 @@
 		relevantRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
 			snapshot.forEach(function(childSnapshot) {
 				list[i] = childSnapshot.val();
-				i++;
+        i++;
 			});
-			callback(list);
+      callback(list);
 		});
 	}
 
@@ -272,16 +272,43 @@
 		companyChatRoomRef.child(name).child("listOfMods").once("value").then(function(snapshot) {
 			snapshot.forEach(function(childSnapshot) {
 				list[i] = childSnapshot.val();
-				i++;
+        i++;
 			});
-			callback(list);
-		});
+      callback(list);
+    })
 	}
+
+  function verifyUserChatroom(relevantRef, ID, name, callback) {
+    var flag = false;
+    if(ID.charAt(0) == '1') {
+      relevantRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
+			     snapshot.forEach(function(childSnapshot) {
+             if(childSnapshot.val().startsWith(ID)) {
+               flag = true;
+             }
+         });
+         callback(flag);
+      });
+    }
+    else if(ID.charAt(0) == '2' && name.charAt(0) == '1'){
+      relevantRef.child(name).child("listOfMods").once("value").then(function(snapshot) {
+			     snapshot.forEach(function(childSnapshot) {
+             if(childSnapshot.val().startsWith(ID)) {
+               flag = true;
+             }
+         });
+         callback(flag);
+      });
+    }
+    else {
+      callback(false);
+    }
+  }
 
 	function compareTwoInterns(internRef, ID1, ID2, callback) {
 		var score = 0;
-		var housing1 = read.getHousingPreferences(internRef, ID1, function(housing1) {
-			var housing2 = read.getHousingPreferences(internRef, ID2, function(housing2) {
+		var housing1 = getHousingPreferences(internRef, ID1, function(housing1) {
+			var housing2 = getHousingPreferences(internRef, ID2, function(housing2) {
 				if (housing1["desiredDuration"] === housing2["desiredDuration"])
 					score += 15;
 				score += 10 - Math.abs(parseInt(housing1["desiredPrice"]) - parseInt(housing2["desiredPrice"]));
@@ -290,22 +317,22 @@
     		});
   		});
 
-    	var roommate1 = read.getRoommatePreferences(internRef, ID1, function(roommate1) {
-      		var roommate2 = read.getRoommatePreferences(internRef, ID2, function(roommate2) {
-						score += (24 - Math.abs(parseInt(roommate1["bedtime"]) - parseInt(roommate2["bedtime"])))/4;
-						score += (24 - Math.abs(parseInt(roommate1["waketime"]) - parseInt(roommate2["waketime"])))/4;
-						score += 5 - Math.abs(parseInt(roommate1["lights"]) - parseInt(roommate2["lights"]));
-						score += (5 - Math.abs(parseInt(roommate1["clean"]) - parseInt(roommate2["clean"]))) * 2;
-						score += 5 - Math.abs(parseInt(roommate1["sharing"]) - parseInt(roommate2["sharing"]));
-						score += 3 - Math.abs(parseInt(roommate1["smoke"]) - parseInt(roommate2["smoke"]));
-						score += 5 - Math.abs(parseInt(roommate1["youpet"]) - parseInt(roommate2["youpet"]));
-						if (roommate1["themguest"] === roommate2["themguest"])
-							score += 5;
-						if (roommate1["youpet"] === roommate2["thempet"])
-							score += 5;
-						if (roommate2["youpet"] === roommate1["thempet"])
-							score += 5;
-						callback(score);
+    	var roommate1 = getRoommatePreferences(internRef, ID1, function(roommate1) {
+      		var roommate2 = getRoommatePreferences(internRef, ID2, function(roommate2) {
+				score += (24 - Math.abs(parseInt(roommate1["bedtime"]) - parseInt(roommate2["bedtime"])))/4;
+				score += (24 - Math.abs(parseInt(roommate1["waketime"]) - parseInt(roommate2["waketime"])))/4;
+				score += 5 - Math.abs(parseInt(roommate1["lights"]) - parseInt(roommate2["lights"]));
+				score += (5 - Math.abs(parseInt(roommate1["clean"]) - parseInt(roommate2["clean"]))) * 2;
+				score += 5 - Math.abs(parseInt(roommate1["sharing"]) - parseInt(roommate2["sharing"]));
+				score += 3 - Math.abs(parseInt(roommate1["smoke"]) - parseInt(roommate2["smoke"]));
+				score += 5 - Math.abs(parseInt(roommate1["youpet"]) - parseInt(roommate2["youpet"]));
+				if (roommate1["themguest"] === roommate2["themguest"])
+					score += 5;
+				if (roommate1["youpet"] === roommate2["thempet"])
+					score += 5;
+				if (roommate2["youpet"] === roommate1["thempet"])
+					score += 5;
+				callback(score);
     		});
     	});
 	}
@@ -315,14 +342,14 @@
 		for (let i = 0, p = Promise.resolve(); i < IDs.length; i++) {
 	    	p = p.then(_ => new Promise(resolve =>
 		        setTimeout(function () {
-							var score = read.compareTwoInterns(internRef, ID1, IDs[i], function(score) {
-								scores[i] = score;
-								if (i === IDs.length - 1) {
-									callback(scores);
-								}
-							})
-		      		resolve();
-		       	}, 100)
+					var score = compareTwoInterns(internRef, ID1, IDs[i], function(score) {
+						scores[i] = score;
+						if (i === IDs.length - 1) {
+							callback(scores);
+						}
+					})
+		            resolve();
+		        }, 100)
 	    	));
 		}
 	}
@@ -333,10 +360,16 @@
 		});
 	}
 
-  function getAdmin(adminRef, callback) {
+	function getAdmin(adminRef, callback) {
 		var list = {};
 		adminRef.child(4000).child("listOfComplaints").once("value").then(function(snapshot) {
 			list = snapshot.val();
 			callback(list);
+		});
+	}
+
+	function getInvite(chatRoomRef, name, ID, callback) {
+		chatRoomRef.child(name).child("listOfInvites").child(ID).once("value").then(function(snapshot) {
+			callback(snapshot.val());
 		});
 	}
