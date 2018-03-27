@@ -536,6 +536,7 @@ app.post('/CREATE-EMPLOYEE', function (req, res) {
 
   create.createEmployee(employeeRef, companyRef, employee_uid, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter);
   create.addEmployeeToCompanyChat(companyChatRoomRef,employeeRef, company, location, employee_uid);
+  update.updateEmployeeChatDetails(chatroomRef, employeeRef, employee_uid);
   //create.createEmployee(employeeRef, employee_uid, req.body.password);
   res.json({
     "userID": employee_uid,
@@ -561,6 +562,7 @@ app.post('/CREATE-INTERN', function (req, res) {
   create.addToLocationChat(locationChatRoomRef, internRef, location, uid);
   create.addInternToCompanyChat(companyChatRoomRef,internRef, company, location, uid);
   res.json({
+    "userID": uid,
     "status": true
   });
 });
@@ -601,6 +603,7 @@ app.post('/UPDATE-PREFERENCES/BASIC-PREFERENCES', function (req, res) {
   var twitterLink = req.body.twitterLink;
   var linkedin = req.body.linkedInLink;
   create.createBasicPreferences(internRef, intern_uid, firstName, lastName, description, fbLink, twitterLink, linkedin);
+  update.updateInternChatDetails(chatroomRef, internRef, uid);
   res.json({
     "status": true
   });
@@ -629,6 +632,7 @@ app.post('/UPDATE-PREFERENCES/ROOMMATE-PREFERENCES', function (req, res) {
   var lights = req.body.lights;
   var clean = req.body.clean;
   create.createRoommatePreferences(internRef, intern_uid, youguest, themguest, youpet, thempet, sharing, smoke, bedtime, waketime, lights, clean);
+  update.updateInternChatDetails(chatroomRef, internRef, uid);
   res.json({
     "status": true
   });
@@ -648,7 +652,7 @@ app.post('/UPDATE-PREFERENCES/HOUSING-PREFERENCES', function (req, res) {
   var intern_uid = uid;
 
   create.createHousingPreferences(internRef, intern_uid, req.body.desiredPrice, req.body.desiredRoommate, req.body.desiredDistance, req.body.desiredDuration);
-
+  update.updateInternChatDetails(chatroomRef, internRef, uid);
   res.json({
     "status": true
   });
@@ -949,6 +953,7 @@ app.post('/GET-MESSAGES', function (req, res) {
   console.log("Done printing out request");
   //var correctRef = chatRoomRef;
   var chatroomName = req.body.chatroomName;
+  var uid = req.body.userID;
   correctRef = findCorrectRef(chatroomName);
   //console.log("correctRef=");
   //console.log(correctRef);
@@ -960,8 +965,18 @@ app.post('/GET-MESSAGES', function (req, res) {
     });
   }
   else {
-    read.getMessages(correctRef, req.body.chatroomName, (x) => {
-      res.send(x);
+    read.verifyUserChatroom(correctRef, uid, req.body.chatroomName, (y) => {
+      if (!y) {
+        res.json({
+          "status": false,
+          "error": "user not in chatroom"
+        });
+      }
+      else {
+        read.getMessages(correctRef, req.body.chatroomName, (x) => {
+          res.send(x);
+        });
+      }
     });
   }
 });
@@ -1020,7 +1035,7 @@ app.post('/CREATE-GROUP-CHAT', function (req, res) {
     else {
       res.json({
         "status": false,
-        "error": "database returned issue"
+        "error": "chat name exists"
       });
     }
   });
@@ -1102,13 +1117,13 @@ app.post('/CREATE-PRIVATE-CHAT', function (req, res) {
     else {
       res.json({
         "status": false,
-        "error": "database returned issue"
+        "error": "chat exists"
       });
     }
   });
 });
 
-//get image:
+//get chatroom:
 app.post('/GET-CHATROOM', function (req, res) {
   console.log("Get chatroom request received");
   console.log(req.body);
@@ -1131,6 +1146,7 @@ app.post('/GET-USERS-IN-CHATROOM', function (req, res) {
   console.log("Get users in chat request received");
   console.log(req.body);
   console.log("Done printing out request");
+  var uid = req.body.userID;
   var correctRef = findCorrectRef(req.body.chatroomName);
   if(correctRef == null){
     res.json({
@@ -1139,8 +1155,18 @@ app.post('/GET-USERS-IN-CHATROOM', function (req, res) {
     });
   }
   else {
-    read.getUsersInChatRoom(correctRef, req.body.chatroomName, (x) => {
-      res.send(x);
+    read.verifyUserChatroom(correctRef, uid, req.body.chatroomName, (x) => {
+      if(x) {
+        read.getUsersInChatRoom(correctRef, req.body.chatroomName, (y) => {
+          res.send(y);;
+        });
+      }
+      else {
+        res.json({
+          "status": false,
+          "error": "not in chatroom"
+        });
+      }
     });
   }
 });
@@ -1151,15 +1177,26 @@ app.post('/GET-MODS-IN-CHATROOM', function (req, res) {
   console.log(req.body);
   console.log("Done printing out request");
   var correctRef = findCorrectRef(req.body.chatroomName);
-  if(correctRef == null){
+  var uid = req.body.userID;
+  if(correctRef == null || correctRef != companyChatRoomRef){
     res.json({
       "status": false,
       "error": "incorrect chatroom name bro"
     });
   }
   else {
-    read.getModsInChatRoom(correctRef, req.body.chatroomName, (x) => {
-      res.send(x);
+    read.verifyUserChatroom(correctRef, uid, req.body.chatroomName, (x) => {
+      if(x) {
+        read.getModsInChatRoom(correctRef, req.body.chatroomName, (y) => {
+          res.send(y);;
+        });
+      }
+      else {
+        res.json({
+          "status": false,
+          "error": "not in chatroom"
+        });
+      }
     });
   }
 });
@@ -1299,6 +1336,106 @@ app.post('/REMOVE-COMPLAINT-ADMIN', function(req, res) {
   res.json({
     "status": true
   })
+});
+
+//get invites for chatroom name
+app.post('/GET-INVITES', function (req, res) {
+  console.log("Get invites request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  //var correctRef = chatRoomRef;
+  var chatroomName = req.body.chatroomName;
+  var uid = req.body.userID;
+  correctRef = findCorrectRef(chatroomName);
+  //console.log("correctRef=");
+  //console.log(correctRef);
+  if(correctRef == null)
+  {
+    res.json({
+      "status":false,
+      "error":"weird chat name bro"
+    });
+  }
+  else {
+    read.verifyUserChatroom(correctRef, uid, req.body.chatroomName, (y) => {
+      if (!y) {
+        res.json({
+          "status": false,
+          "error": "user not in chatroom"
+        });
+      }
+      else {
+        read.getInvite(correctRef, req.body.chatroomName, uid, (x) => {
+          console.log(x);
+          res.json({
+            "invite_status": x
+          });
+        });
+      }
+    });
+  }
+});
+
+//create employee chat
+app.post('/CREATE-EMPLOYEE-CHAT', function (req, res) {
+  console.log("create employee request received");
+  console.log(req.body);
+  console.log("Done printing out request");
+  //var correctRef = chatRoomRef;
+  var chatroomName = req.body.chatroomName;
+  var internUid = req.body.InternUserID;
+  var employeeUid = req.body.EmployeeUserID;
+  if(employeeUid.charAt(0) != '2') {
+    res.json({
+      "status": false,
+      "error": "employee is not employee"
+    });
+  }
+  else if(internUid.charAt(0) != '1') {
+    res.json({
+      "status": false,
+      "error": "intern is not employee"
+    });
+  }
+  else {
+    create.createEmployeeChat(privateChatRoomRef, internRef, employeeRef, internUid, employeeUid, chatroomName, (x) => {
+      if(x) {
+        res.json({
+          "status": true
+        });
+      }
+      else {
+        res.json({
+          "status": false,
+          "error": "chat name exists"
+        })
+      }
+    });
+  }
+  correctRef = privateChatRoomRef;
+  //console.log("correctRef=");
+  //console.log(correctRef);
+});
+
+//accept invite:
+app.post('/ACCEPT-INVITE', function(req, res) {
+  console.log('ACCEPT INVITE request received');
+  console.log(req.body);
+  var chatroomName = req.body.chatroomName;
+  var uid = req.body.userID;
+  var correctRef = findCorrectRef(chatroomName);
+  if(correctRef == null){
+    res.json({
+      "status": false,
+      "error": "chatroom name is incorrect"
+    });
+  }
+  else {
+    update.acceptInvite(correctRef, chatroomName, uid);
+    res.json({
+      "status": true
+    })
+  }
 });
 
 //empty jsons
