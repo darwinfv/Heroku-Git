@@ -415,8 +415,8 @@ app.post('/REMOVE-USER', function (req, res) {
   var uid = req.body.userID;
   console.log(uid);
 
-  update.removeIntern(internRef, chatRoomRef, uid);
-  update.removeEmployee(employeeRef, chatRoomRef, companyRef, uid);
+  update.removeIntern(internRef, chatroomRef, uid);
+  update.removeEmployee(employeeRef, chatroomRef, companyRef, uid);
   res.json({
     "status": true
   });
@@ -1285,7 +1285,7 @@ app.post('/CREATE-COMPLAINT', function(req,res) {
   var complaint = req.body.complaint;
   var from = req.body.from;
   var to = req.body.to;
-  if(modID.charAt(0) == '4') {
+  if(id.charAt(0) == '4') {
     create.createComplaint(adminRef, id, complaint, to, from, id2)
     res.json({
       "status": true
