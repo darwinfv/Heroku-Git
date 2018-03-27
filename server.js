@@ -798,9 +798,19 @@ app.post('/GET-INTERN', function (req, res) {
 
   //create intern uid
   if(uid.charAt(0) == '1') {
-    read.getIntern(internRef, uid, (x) => {
-      console.log(x);
-      res.send(x);
+    read.verifyUserExists(internRef, uid, (y) => {
+      if(y) {
+        read.getIntern(internRef, uid, (x) => {
+          console.log(x);
+          res.send(x);
+        });
+      }
+      else {
+        res.json({
+          "status": false,
+          "error": "user does not exists"
+        })
+      }
     });
   }
   else {
@@ -858,19 +868,27 @@ app.post('/GET-EMPLOYEE', function (req, res) {
   var uid = req.body.userID;
   console.log(uid);
 
-  //create intern uid
-  read.getEmployee(employeeRef, uid, (x) => {
-    if (x != null)
-    {
-      console.log(x);
-      res.send(x);
-    }
-    else {
-      res.json({
-        "status": false
-      });
-    }
-  });
+  if(uid.charAt(0) == '2') {
+    read.verifyUserExists(employeeRef, uid, (y) => {
+      if(y) {
+        read.getEmployee(employeeRef, uid, (x) => {
+          console.log(x);
+          res.send(x);
+        });
+      }
+      else {
+        res.json({
+          "status": false,
+          "error": "user does not exists"
+        })
+      }
+    });
+  }
+  else {
+    res.json({
+      "status": false
+    });
+  }
 });
 
 //master list handler
