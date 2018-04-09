@@ -75,6 +75,12 @@ var locationChatRoomRef = db.ref("/ChatRooms/Location");
 var companyChatRoomRef = db.ref("/ChatRooms/Company");
 var adminRef = db.ref("/Admin");
 
+//set up zillow:
+var Zillow = require('node-zillow');
+//Instantiate
+var zillow = new Zillow('X1-ZWz1gcc7xw62a3_3wguv');
+
+
 //test-function
 function test() {
   //create an intern
@@ -542,6 +548,45 @@ app.post('/CREATE-EMPLOYEE', function (req, res) {
     "userID": employee_uid,
     "status": true
   });
+});
+
+//create employee hadnler
+app.post('/UPDATE-EMPLOYEE', function (req, res) {
+  console.log('Received request for UPDATE-EMPLOYEE:');
+  console.log(req.body);
+
+  //store variables
+  var employee_uid = req.body.userID;
+  //create UID (2 for employee)
+  console.log("UID generated:");
+  console.log(employee_uid);
+  var firstName = req.body.firstName;
+  var lastName = req.body.lastName;
+  var email = req.body.username;
+  var company = req.body.company;
+  var location = req.body.location;
+  var description = req.body.description;
+  var facebook = req.body.facebook;
+  var linkedin = req.body.linkedin;
+  var twitter = req.body.twitter;
+
+  read.verifyUserExists(employeeRef, employee_uid, (x) => {
+    if(x) {
+      update.updateEmployee(employeeRef, employee_uid, firstName, lastName, location, description, facebook, linkedin, twitter);
+      res.json({
+        "userID": employee_uid,
+        "status": true
+      });
+    } else {
+      res.json({
+        "status": false,
+        "error": "UID does not exist"
+      })
+    }
+  })
+  update.updateEmployeeChatDetails(chatroomRef, employeeRef, employee_uid);
+  //create.createEmployee(employeeRef, employee_uid, req.body.password);
+
 });
 
 //initial create intern
@@ -1456,6 +1501,61 @@ app.post('/ACCEPT-INVITE', function(req, res) {
   }
 });
 
+//accept company
+app.post('/ACCEPT-COMPANY', function (req, res) {
+  console.log('Request recieved for accept company');
+  console.log(req.body);
+  var name = req.body.name;
+  update.acceptCompany(adminRef, companyRef, name);
+  res.json({
+    "status": true
+  });
+});
+
+//deny company
+app.post('/DENY-COMPANY', function (req, res) {
+  console.log('request received for denying company');
+  console.log(req.body);
+  var name = req.body.name;
+  update.denyCompany(companyRef, name);
+  res.json({
+    "status": true
+  })
+});
+
+//get admin companies
+app.post('/GET-ADMIN-COMPANIES', function (req, res) {
+  console.log("Get admin companies request received");
+  console.log(req.body);
+  read.getAdminCompanies(adminRef, (x) => {
+    console.log(x);
+    res.send(x);
+  });
+});
+
+//get notifications
+app.post('/GET-NOTIFICATIONS', function (req, res) {
+  console.log("Get notifications request received");
+  console.log(req.body);
+  var uid = req.body.userID;
+  read.getNotifications(internRef, uid, (x) => {
+    console.log(x);
+    res.send(x);
+  });
+});
+
+//test zillow
+function  testZillow() {
+  var parameters = {
+    zpid: "50633081",
+    address: "10586 Roundwood Glen Ct Jacksonville, FL",
+    citystatezip: "32265"
+  };
+  zillow.get('GetSearchResults', parameters).then((response) => {
+    console.log(response.response.results.result[0].zestimate[0].amount[0]._);
+  })
+}
+
 //empty jsons
 function isEmptyObject(obj) {
   return !Object.keys(obj).length;
@@ -1469,6 +1569,7 @@ app.listen(port, function () {
   console.log('Testing begins, check database');
   //test();
   console.log('Testing done');
+  testZillow();
 
   console.log('Database setup done');
   console.log('App listening on port: ' + port + '!');
