@@ -16,13 +16,14 @@ module.exports = {
   createPrivateChat,
   createEmployeeChat,
   addMessageToChat,
-  createComplaint
+  createComplaint,
+  addHouse
 }
 
 var update = require('./update.js');
 var create = require('./create.js');
 
-function createCompany(companyRef, companyName, email, password, listOfLocations = "novalue", listOfEmployees = []) {
+function createCompany(adminRef, companyRef, companyName, email, password, listOfLocations = "novalue", listOfEmployees = []) {
     companyRef.update({
       [companyName]: "novalue"
     });
@@ -32,11 +33,13 @@ function createCompany(companyRef, companyName, email, password, listOfLocations
       "email": email,
       "password": password,
       "listOfLocations": [listOfLocations],
-      "listOfEmployees": [listOfEmployees]
+      "listOfEmployees": [listOfEmployees],
+      "verified": "pending"
     });
+    update.getSnapshot(adminRef, 4000, "listOfCompanies", companyName);
   }
 
-function createIntern(internRef, id, email, company, location = "novalue") {
+  function createIntern(internRef, id, email, company, location = "novalue") {
     internRef.update({
       [id]:"novalue"
     });
@@ -52,7 +55,7 @@ function createIntern(internRef, id, email, company, location = "novalue") {
     });
   }
 
-function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
+  function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
     employeeRef.update({
       [id]:"novalue"
     });
@@ -73,7 +76,7 @@ function createEmployee(employeeRef, companyRef, id, firstName, lastName, passwo
     update.updateCompany(companyRef, company, firstName + " " + lastName);
   }
 
-function createPassword(relevantRef, ID, password) {
+  function createPassword(relevantRef, ID, password) {
     relevantRef.child(ID).update({
       "password": password
     });
@@ -114,22 +117,15 @@ function createHousingPreferences(internRef, ID, price, roommates, distance, dur
 }
 
   function createProfilePicture(storageRef, relevantRef, ID, image) {
-    var imageRef = relevantRef.child(ID).child("images");
+  var imageRef = relevantRef.child(ID).child("images");
     storageRef.child(ID + "/").getDownloadURL().then(function(url) {
-      imageRef.child("image").set(url);
+        imageRef.child("image").set(url);
     });
     var task = storageRef.child(ID + "/").putString(image, 'base64').then(function(snapshot) {
          console.log('Uploaded a base64 string!');
     });
-  }
+}
 
-/*
-  / @brief this function adds users to the area/city
-  /        chat room
-  /
-  / @usage call this function after createIntern to add
-  /        them to the area/city chat room
-  */
 function addToLocationChat(locationChatRoomRef, internRef, location, user) {
   var item = user + "$:$";
   internRef.child(user).once("value").then(function(snapshot) {
@@ -324,4 +320,51 @@ function addMessageToChat(chatRoomRef, name, message) {
 
 function createComplaint(employeeRef, ID, complaint, complaintee, complainter, CID) {
   update.getSnapshot(employeeRef, ID, "listOfComplaints", CID + "$:$" + complainter + "$:$" + complaintee + "$:$" + complaint);
+}
+
+function addHouse(groupChatRoomRef, houseRef, internRef, name, house) {
+  houseRef.child(house).once("value").then(function(snapshot) {
+    if(snapshot.exists()) {
+      console.log("here")
+      var count = snapshot.val().count;
+      count++;
+      houseRef.child(house).update({
+        "count": count,
+        [count]: name
+      });
+    }
+    else {
+      houseRef.update({
+        [house]: "novalue"
+      });
+      houseRef.child(house).update({
+        "count": "1",
+        "1": name
+      })
+    }
+  });
+
+  update.getSnapshot(groupChatRoomRef, name, "listOfHouses", house);
+
+  groupChatRoomRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
+    snapshot.forEach(function(childSnapshot) {
+      internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").once("value").then(function(babySnapshot) {
+        if(babySnapshot.exists()) {
+          var count = babySnapshot.val().count;
+          count++;
+          internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
+            "count": count,
+            [count]: house + " was added to " + name.substring(1)
+          });
+        }
+        else {
+          var string = house + " was added to " + name.substring(1);
+          internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
+            "count": 1,
+            "1": string
+          });
+        }
+      });
+    });
+  });
 }

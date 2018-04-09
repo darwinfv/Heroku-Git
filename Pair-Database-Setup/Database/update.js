@@ -13,21 +13,13 @@
       removeComplaint,
       updateInternChatDetails,
       updateEmployeeChatDetails,
-      acceptInvite
+      acceptInvite,
+      acceptCompany,
+      denyCompany
   }
 
-   var update = require('./update.js');
+  var update = require('./update.js');
 
-/*
-  / @brief this function retrieves the already existent
-  /        items from a list and adds the new ones to it
-  /        can be used to update lists and arrays
-  /
-  / @param relevantRef a reference to the appropriate object header
-  / @param childName the name of the object you want to update
-  / @param itemName the item you want to update
-  / @param newValue the values you want to add
-  */
   function getSnapshot(relevantRef, childName, itemName, newValue) {
     var ref = relevantRef.child(childName).child(itemName);
     var oldlist = [];
@@ -44,9 +36,6 @@
   }
 
   function updateCompany(companyRef, companyName, employees, locations = []) {
-    console.log(employees);
-    console.log(locations);
-    console.log();
     update.getSnapshot(companyRef, companyName, "listOfLocations", locations);
     update.getSnapshot(companyRef, companyName, "listOfEmployees", employees);
   };
@@ -117,37 +106,37 @@
   }
 
   function removeIntern(internRef, chatRoomRef, ID) {
-    var rooms = [];
-		internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
-            snapshot.forEach(function(childSnapshot) {
-                rooms.push(childSnapshot.val());
-            });
-            internRef.child(ID).remove();
-            var ref;
-            rooms.forEach(function(entry) {
-                if(entry[0] == 1)
-                    ref = chatRoomRef.child("Company");
-                else if(entry[0] == 2)
-                    ref = chatRoomRef.child("Location");
-                else if(entry[0] == 3)
-                    ref = chatRoomRef.child("Group");
-                else if(entry[0] == 4)
-                    ref = chatRoomRef.child("Private");
-                ref.child(entry).child("listOfInvites").child(ID).remove();
-                ref.child(entry).child("listOfUsers").once("value").then(function(babySnapshot) {
-                    var j = 0;
-                    babySnapshot.forEach(function(infantSnapshot) {
-                        j++;
-                        if(infantSnapshot.val().startsWith(ID)) {
-                            ref.child(entry).child("listOfUsers").child(infantSnapshot.key).remove();
-                        }
-                    });
-                    if(j <= 1) {
-                        ref.child(entry).remove();
-                    }
-                });
-            });
-        });
+      var rooms = [];
+      internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+              rooms.push(childSnapshot.val());
+          });
+          internRef.child(ID).remove();
+          var ref;
+          rooms.forEach(function(entry) {
+              if(entry[0] == 1)
+                  ref = chatRoomRef.child("Company");
+              else if(entry[0] == 2)
+                  ref = chatRoomRef.child("Location");
+              else if(entry[0] == 3)
+                  ref = chatRoomRef.child("Group");
+              else if(entry[0] == 4)
+                  ref = chatRoomRef.child("Private");
+              ref.child(entry).child("listOfInvites").child(ID).remove();
+              ref.child(entry).child("listOfUsers").once("value").then(function(babySnapshot) {
+                  var j = 0;
+                  babySnapshot.forEach(function(infantSnapshot) {
+                      j++;
+                      if(infantSnapshot.val().startsWith(ID)) {
+                          ref.child(entry).child("listOfUsers").child(infantSnapshot.key).remove();
+                      }
+                  });
+                  if(j <= 1) {
+                      ref.child(entry).remove();
+                  }
+              });
+          });
+      });
   }
 
   function removeEmployee(employeeRef, chatRoomRef, companyRef, ID) {
@@ -175,6 +164,7 @@
               }
           });
       });
+      chatRoomRef.child(name).child("listOfInvites").child(ID).remove();
       internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
           snapshot.forEach(function(childSnapshot) {
               if(childSnapshot.val() == name) {
@@ -277,5 +267,24 @@
   function acceptInvite(chatRoomRef, name, ID) {
       chatRoomRef.child(name).child("listOfInvites").update({
           [ID]: true
+      });
+  }
+
+  function acceptCompany(adminRef, companyRef, name) {
+      companyRef.child(name).update({
+          "verified": true
+      });
+      adminRef.child(4000).child("listOfCompanies").once("value").then(function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+              if(childSnapshot.val() == name)
+                  adminRef.child(4000).child("listOfCompanies").child(childSnapshot.key).remove();
+          });
+      });
+  }
+
+  function denyCompany(companyRef, name) {
+      // companyRef.child(name).remove();
+      companyRef.child(name).update({
+          "verified": false
       });
   }

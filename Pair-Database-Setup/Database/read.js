@@ -19,8 +19,10 @@
 		compareInterns,
 		getImage,
 		getAdmin,
+		getAdminCompanies,
 		getInvite,
-    verifyUserChatroom
+		verifyUserChatroom,
+		getNotifications
 	}
 
 	function getMasterListOfInterns(internRef, company, callback) {
@@ -57,6 +59,7 @@
 					childSnapshot.child("listOfEmployees").forEach(function(babySnapshot) {
 						json["employees"][babySnapshot.key] = babySnapshot.val();
 					});
+					json["verified"] = childSnapshot.val().verified;
 				}
 			});
 			callback(json);
@@ -77,6 +80,7 @@
 			snapshot.child("listOfEmployees").forEach(function(childSnapshot) {
 				json["employees"][childSnapshot.key] = childSnapshot.val();
 			});
+			json["verified"] = childSnapshot.val().verified;
 			callback(json);
 		});
 	}
@@ -260,9 +264,9 @@
 		relevantRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
 			snapshot.forEach(function(childSnapshot) {
 				list[i] = childSnapshot.val();
-        i++;
+				i++;
 			});
-      callback(list);
+			callback(list);
 		});
 	}
 
@@ -272,47 +276,11 @@
 		companyChatRoomRef.child(name).child("listOfMods").once("value").then(function(snapshot) {
 			snapshot.forEach(function(childSnapshot) {
 				list[i] = childSnapshot.val();
-        i++;
+				i++;
 			});
-      callback(list);
-    })
+			callback(list);
+		});
 	}
-
-  function verifyUserChatroom(relevantRef, ID, name, callback) {
-    var flag = false;
-    if(ID.charAt(0) == '1') {
-      relevantRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
-			     snapshot.forEach(function(childSnapshot) {
-             if(childSnapshot.val().startsWith(ID)) {
-               flag = true;
-             }
-         });
-         callback(flag);
-      });
-    }
-    else if(ID.charAt(0) == '2' && name.charAt(0) == '1'){
-      relevantRef.child(name).child("listOfMods").once("value").then(function(snapshot) {
-			     snapshot.forEach(function(childSnapshot) {
-             if(childSnapshot.val().startsWith(ID)) {
-               flag = true;
-             }
-         });
-         callback(flag);
-      });
-    } else if(ID.charAt(0) == '2' && name.charAt(0) == '4'){
-      relevantRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
-			     snapshot.forEach(function(childSnapshot) {
-             if(childSnapshot.val().startsWith(ID)) {
-               flag = true;
-             }
-         });
-         callback(flag);
-      });
-    }
-    else {
-      callback(false);
-    }
-  }
 
 	function compareTwoInterns(internRef, ID1, ID2, callback) {
 		var score = 0;
@@ -377,8 +345,65 @@
 		});
 	}
 
+	function getAdminCompanies(adminRef, callback) {
+		var list = {};
+		var i = 0;
+		adminRef.child(4000).child("listOfCompanies").once("value").then(function(snapshot) {
+			snapshot.forEach(function(childSnapshot) {
+				list[i] = childSnapshot.val();
+				i++;
+			});
+			callback(list);
+		});
+	}
+
 	function getInvite(chatRoomRef, name, ID, callback) {
 		chatRoomRef.child(name).child("listOfInvites").child(ID).once("value").then(function(snapshot) {
 			callback(snapshot.val());
+		});
+	}
+
+	function verifyUserChatroom(relevantRef, ID, name, callback) {
+	    var flag = false;
+	    if(ID.charAt(0) == '1') {
+			relevantRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
+		    	snapshot.forEach(function(childSnapshot) {
+		        	if(childSnapshot.val().startsWith(ID)) {
+		            	flag = true;
+		            }
+		        });
+				callback(flag);
+			});
+	    }
+	    else if(ID.charAt(0) == '2' && name.charAt(0) == '1') {
+			relevantRef.child(name).child("listOfMods").once("value").then(function(snapshot) {
+				snapshot.forEach(function(childSnapshot) {
+	            	if(childSnapshot.val().startsWith(ID)) {
+						flag = true;
+	            	}
+	            });
+	        	callback(flag);
+	    	});
+	    }
+	    else if(ID.charAt(0) == '2' && name.charAt(0) == '4') {
+			relevantRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
+				snapshot.forEach(function(childSnapshot) {
+	            	if(childSnapshot.val().startsWith(ID)) {
+						flag = true;
+	            	}
+	            });
+	        	callback(flag);
+	    	});
+	    }
+	    else {
+			callback(false);
+	    }
+	}
+
+	function getNotifications(internRef, ID, callback) {
+		var list = {};
+		internRef.child(ID).child("listOfNotifications").once("value").then(function(snapshot) {
+			list = snapshot.val();
+			callback(list);
 		});
 	}
