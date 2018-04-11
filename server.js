@@ -1,7 +1,4 @@
 //dependencies:
-module.exports = {
-  UID
-}
 //server dependencies
 const express = require('express');
 const app = express();
@@ -74,6 +71,7 @@ var privateChatRoomRef = db.ref("/ChatRooms/Private");
 var locationChatRoomRef = db.ref("/ChatRooms/Location");
 var companyChatRoomRef = db.ref("/ChatRooms/Company");
 var adminRef = db.ref("/Admin");
+var houseRef = db.ref("/Houses")
 
 //set up zillow:
 var Zillow = require('node-zillow');
@@ -623,7 +621,7 @@ app.post('/CREATE-COMPANY', function (req, res) {
   var listOfEmployees = req.body.employees;
   var email = req.body.email;
   var password = encrypt(req.body.password);
-  create.createCompany(companyRef, name, email, password, listOfLocations, listOfEmployees);
+  create.createCompany(adminRef, companyRef, name, email, password, listOfLocations, listOfEmployees);
   res.json({
     "status": true
   });
@@ -1544,12 +1542,49 @@ app.post('/GET-NOTIFICATIONS', function (req, res) {
   });
 });
 
+//get zillow results
+app.post('/GET-ZILLOW-RESULTS', function (req, res) {
+  console.log("Get zillow requests request received");
+  console.log(req.body);
+  var address = req.body.address;
+  var zip = req.body.zip;
+  var params = {
+    "address": address,
+    "citystatezip": zip
+  };
+  console.log("params made");
+  console.log(params);
+  zillow.get('GetDeepSearchResults', params).then((response) => {
+    console.log(response.response.results.result[0].zestimate[0].amount[0]._);
+    res.send(response);
+  })
+});
+
+//create houses
+app.post('/CREATE-HOUSE', function (req, res) {
+  console.log('Create a house request received');
+  console.log(req.body);
+  var address = req.body.address;
+  var price = req.body.price;
+  var sqft = req.body.sqft;
+  var bedrooms = req.body.bedroom;
+  var bathrooms = req.body.bathroom;
+  var url = req.body.url;
+  var zip = req.body.zip;
+  var state = req.body.state;
+  var image = req.body.image;
+  create.createHouse(houseRef, address, state, zip, price, sqft, bedrooms, bathrooms, url, image);
+  res.json({
+    "status": true
+  })
+})
+
 //test zillow
 function  testZillow() {
   var parameters = {
     zpid: "50633081",
     address: "10586 Roundwood Glen Ct Jacksonville, FL",
-    citystatezip: "32265"
+    citystatezip: "32256"
   };
   zillow.get('GetSearchResults', parameters).then((response) => {
     console.log(response.response.results.result[0].zestimate[0].amount[0]._);
@@ -1568,8 +1603,9 @@ app.listen(port, function () {
   console.log("SERVER STARTS");
   console.log('Testing begins, check database');
   //test();
-  console.log('Testing done');
   testZillow();
+  console.log('Testing done');
+
 
   console.log('Database setup done');
   console.log('App listening on port: ' + port + '!');
