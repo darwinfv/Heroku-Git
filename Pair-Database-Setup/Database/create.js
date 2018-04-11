@@ -1,4 +1,3 @@
-
 module.exports = {
   createCompany,
   createIntern,
@@ -17,7 +16,10 @@ module.exports = {
   createEmployeeChat,
   addMessageToChat,
   createComplaint,
-  addHouse
+  createHouse,
+  addHouse,
+  addNotification,
+	writeReview,
 }
 
 var update = require('./update.js');
@@ -37,9 +39,9 @@ function createCompany(adminRef, companyRef, companyName, email, password, listO
       "verified": "pending"
     });
     update.getSnapshot(adminRef, 4000, "listOfCompanies", companyName);
-  }
+}
 
-  function createIntern(internRef, id, email, company, location = "novalue") {
+function createIntern(internRef, id, email, company, location = "novalue") {
     internRef.update({
       [id]:"novalue"
     });
@@ -53,7 +55,7 @@ function createCompany(adminRef, companyRef, companyName, email, password, listO
     internRef.child(id).child("images").update({
       "image": "undefined"
     });
-  }
+}
 
   function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
     employeeRef.update({
@@ -82,7 +84,7 @@ function createCompany(adminRef, companyRef, companyName, email, password, listO
     });
   }
 
-  function createBasicPreferences(internRef, ID, firstName, lastName, description, fbLink, twitterLink, linkedin) {
+function createBasicPreferences(internRef, ID, firstName, lastName, description, fbLink, twitterLink, linkedin) {
     internRef.child(ID).child('basic').update({
     "description": description,
     "fbLink": fbLink,
@@ -117,14 +119,14 @@ function createHousingPreferences(internRef, ID, price, roommates, distance, dur
 }
 
   function createProfilePicture(storageRef, relevantRef, ID, image) {
-  var imageRef = relevantRef.child(ID).child("images");
+    var imageRef = relevantRef.child(ID).child("images");
     storageRef.child(ID + "/").getDownloadURL().then(function(url) {
         imageRef.child("image").set(url);
     });
     var task = storageRef.child(ID + "/").putString(image, 'base64').then(function(snapshot) {
          console.log('Uploaded a base64 string!');
     });
-}
+  }
 
 function addToLocationChat(locationChatRoomRef, internRef, location, user) {
   var item = user + "$:$";
@@ -322,6 +324,21 @@ function createComplaint(employeeRef, ID, complaint, complaintee, complainter, C
   update.getSnapshot(employeeRef, ID, "listOfComplaints", CID + "$:$" + complainter + "$:$" + complaintee + "$:$" + complaint);
 }
 
+function createHouse(houseRef, address, state, zip, price, sqft, bedrooms, bathrooms, url, image) {
+		houseRef.child(state).child(zip).update({
+			[address]: "novalue"
+		});
+		houseRef.child(state).child(zip).child(address).update({
+			"count": 0,
+			"bedrooms": bedrooms,
+			"bathrooms": bathrooms,
+			"url": url,
+			"price": price,
+			"sqft": sqft,
+      "image": image
+		});
+	}
+
 function addHouse(groupChatRoomRef, houseRef, internRef, name, house) {
   houseRef.child(house).once("value").then(function(snapshot) {
     if(snapshot.exists()) {
@@ -368,3 +385,32 @@ function addHouse(groupChatRoomRef, houseRef, internRef, name, house) {
     });
   });
 }
+
+function addNotification(groupChatRoomRef, internRef, notification, exception = 0000) {
+		groupChatRoomRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
+			snapshot.forEach(function(childSnapshot) {
+				if(exception == childSnapshot.val().substring(0, 4))
+					continue;
+				internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").once("value").then(function(babySnapshot) {
+					if(babySnapshot.exists()) {
+						var count = babySnapshot.val().count;
+						count++;
+						internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
+							"count": count,
+							[count]: notification
+						});
+					}
+					else {
+						internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
+							"count": 1,
+							"1": notification
+						});
+					}
+				});
+			});
+		});
+}
+
+function writeReview(houseRef, house, review) {
+		udpate.getSnapshot(houseRef, house, "listOfReviews", review);
+	}

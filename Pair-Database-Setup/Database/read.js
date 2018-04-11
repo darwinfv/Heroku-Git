@@ -59,7 +59,7 @@
 					childSnapshot.child("listOfEmployees").forEach(function(babySnapshot) {
 						json["employees"][babySnapshot.key] = babySnapshot.val();
 					});
-					json["verified"] = childSnapshot.val().verified;
+					json["verified"] = sSnapshot.val().verified;
 				}
 			});
 			callback(json);
@@ -80,7 +80,7 @@
 			snapshot.child("listOfEmployees").forEach(function(childSnapshot) {
 				json["employees"][childSnapshot.key] = childSnapshot.val();
 			});
-			json["verified"] = childSnapshot.val().verified;
+			json["verified"] = snapshot.val().verified;
 			callback(json);
 		});
 	}
