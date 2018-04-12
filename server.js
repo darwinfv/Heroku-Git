@@ -47,6 +47,11 @@ var allowCrossDomain = function(req, res, next) {
 };
 app.use(allowCrossDomain);
 
+var Houses = {};
+Houses["CA"] = {};
+Houses["NY"] = {};
+Houses["TX"] = {};
+
 //uncomment if first time
 //var firebase_app = admin.initializeApp();
 //serviceAccount
@@ -1579,6 +1584,106 @@ app.post('/CREATE-HOUSE', function (req, res) {
   })
 })
 
+//write review
+app.post('/WRITE-REVIEW', function (req, res) {
+  console.log("request received for writing review");
+  console.log(req.body);
+  var house = req.body.house;
+  var review = req.body.review;
+  create.writeReview(houseRef, house, review);
+  res.json({
+    "status": true
+  })
+});
+
+//add notification
+app.post('/ADD-NOTIFICATION', function (req, res) {
+  console.log("request received for add notifications");
+  console.log(req.body);
+  var name = req.body.name;
+  var notification = req.body.notification;
+  create.addNotification(groupChatRoomRef,houseRef, internRef, name, notification, 0000);
+  res.json({
+    "status": true
+  })
+});
+
+//add house
+app.post('/ADD-HOUSE', function (req, res) {
+  console.log("request received for adding house");
+  console.log(req.body);
+  var house = req.body.house;
+  var name = req.body.name;
+  var ID = req.body.userID;
+  create.addHouse(groupChatRoomRef, houseRef, internRef, name, ID, house);
+  res.json({
+    "status": true
+  })
+});
+
+//like house
+app.post('/LIKE-HOUSE', function (req, res) {
+  console.log("request received for liking house");
+  console.log(req.body);
+  var house = req.body.house;
+  var name = req.body.name;
+  var uid = req.body.userID;
+  update.likeHouse(groupChatRoomRef, name, house, uid, (x) => {
+    res.json({
+      "status": true,
+      "liked": x
+    })
+  });
+});
+
+//get reviews:
+app.post('/GET-REVIEWS', function (req, res) {
+  console.log("request received for getting");
+  console.log(req.body);
+  var house = req.body.house;
+  update.likeHouse(houseRef, house, (x) => {
+    res.json({
+      "status": true,
+      "liked": x
+    })
+  });
+});
+
+//get houses:
+app.post('/GET-HOUSES', function (req, res) {
+  console.log("request received for getting house");
+  console.log(req.body);
+  var state = req.body.state;
+  read.getHouses(houseRef,state, (x) => {
+    res.send(Houses[state]);
+  });
+});
+
+
+function parseHouses(state) {
+    read.getHouses(houseRef, state, (x) => {
+      var number = 1;
+      //have a foreach loop to go through all the states:
+      for (var zip in x) {
+
+        //have a loop that goes through all address in a ZIP
+        for (var addr in x[zip]) {
+          Houses[state][number] = {
+            "address": addr
+          }
+
+          //get all attributes in the house
+          for (var attributes in x[zip][addr]) {
+            Houses[state][number][attributes] = x[zip][addr][attributes];
+          }
+
+          number++;
+        }
+      }
+      Houses[state]["number"] = number;
+    });
+}
+
 //test zillow
 function  testZillow() {
   var parameters = {
@@ -1603,8 +1708,23 @@ app.listen(port, function () {
   console.log("SERVER STARTS");
   console.log('Testing begins, check database');
   //test();
-  testZillow();
+  //testZillow();
   console.log('Testing done');
+
+  //strart parsing houses:
+  console.log("Begin parsing CA");
+  parseHouses("CA");
+  console.log("End parsing CA");
+
+  console.log("Begin parsing NY");
+  parseHouses("NY");
+  console.log("End parsing NY");
+
+  console.log("Begin parsing TX");
+  parseHouses("TX");
+  console.log("End parsing TX");
+
+  console.log("Done parsing houses");
 
 
   console.log('Database setup done');
