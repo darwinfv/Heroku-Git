@@ -34,8 +34,8 @@ function createCompany(adminRef, companyRef, companyName, email, password, listO
       "pin": pin,
       "email": email,
       "password": password,
-      "listOfLocations": [listOfLocations],
-      "listOfEmployees": [listOfEmployees],
+      "listOfLocations": listOfLocations,
+      "listOfEmployees": listOfEmployees,
       "verified": "pending"
     });
     update.getSnapshot(adminRef, 4000, "listOfCompanies", companyName);
