@@ -1,3 +1,4 @@
+
 module.exports = {
   createCompany,
   createIntern,
@@ -19,7 +20,7 @@ module.exports = {
   createHouse,
   addHouse,
   addNotification,
-	writeReview,
+  writeReview,
 }
 
 var update = require('./update.js');
@@ -39,7 +40,7 @@ function createCompany(adminRef, companyRef, companyName, email, password, listO
       "verified": "pending"
     });
     update.getSnapshot(adminRef, 4000, "listOfCompanies", companyName);
-}
+  }
 
 function createIntern(internRef, id, email, company, location = "novalue") {
     internRef.update({
@@ -55,9 +56,9 @@ function createIntern(internRef, id, email, company, location = "novalue") {
     internRef.child(id).child("images").update({
       "image": "undefined"
     });
-}
+  }
 
-  function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
+function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
     employeeRef.update({
       [id]:"novalue"
     });
@@ -78,7 +79,7 @@ function createIntern(internRef, id, email, company, location = "novalue") {
     update.updateCompany(companyRef, company, firstName + " " + lastName);
   }
 
-  function createPassword(relevantRef, ID, password) {
+function createPassword(relevantRef, ID, password) {
     relevantRef.child(ID).update({
       "password": password
     });
@@ -118,7 +119,7 @@ function createHousingPreferences(internRef, ID, price, roommates, distance, dur
   });
 }
 
-  function createProfilePicture(storageRef, relevantRef, ID, image) {
+function createProfilePicture(storageRef, relevantRef, ID, image) {
     var imageRef = relevantRef.child(ID).child("images");
     storageRef.child(ID + "/").getDownloadURL().then(function(url) {
         imageRef.child("image").set(url);
@@ -325,92 +326,71 @@ function createComplaint(employeeRef, ID, complaint, complaintee, complainter, C
 }
 
 function createHouse(houseRef, address, state, zip, price, sqft, bedrooms, bathrooms, url, image) {
-		houseRef.child(state).child(zip).update({
-			[address]: "novalue"
-		});
-		houseRef.child(state).child(zip).child(address).update({
-			"count": 0,
-			"bedrooms": bedrooms,
-			"bathrooms": bathrooms,
-			"url": url,
-			"price": price,
-			"sqft": sqft,
-      "image": image
-		});
-	}
+  houseRef.child(state).child(zip).update({
+    [address]: "novalue"
+  });
+  houseRef.child(state).child(zip).child(address).update({
+    "count": 0,
+    "bedrooms": bedrooms,
+    "bathrooms": bathrooms,
+    "url": url,
+    "price": price,
+    "sqft": sqft,
+    "image": image
+  });
+}
 
-function addHouse(groupChatRoomRef, houseRef, internRef, name, house) {
-  houseRef.child(house).once("value").then(function(snapshot) {
-    if(snapshot.exists()) {
-      console.log("here")
-      var count = snapshot.val().count;
-      count++;
-      houseRef.child(house).update({
-        "count": count,
-        [count]: name
-      });
-    }
-    else {
-      houseRef.update({
-        [house]: "novalue"
-      });
-      houseRef.child(house).update({
-        "count": "1",
-        "1": name
-      })
+function addHouse(groupChatRoomRef, houseRef, internRef, name, ID, house) {
+  var split = house.split(" ");
+    var state = split[split.length - 2];
+    var zip = split[split.length - 1];
+  houseRef.child(state).child(zip).child(house).once("value").then(function(snapshot) {
+    var count = snapshot.val().count;
+    count++;
+    houseRef.child(state).child(zip).child(house).update({
+      "count": count,
+      [count]: name
+    });
+    for(var i = 1; i < count; i++) {
+      create.addNotification(groupChatRoomRef, internRef, snapshot.val()[i], "Another group \"" + snapshot.val()[i].substring(1) + "\" added " + house + " to the housing list");
     }
   });
 
-  update.getSnapshot(groupChatRoomRef, name, "listOfHouses", house);
+  groupChatRoomRef.child(name).child("listOfHouses").update({
+    [house]: "novalue"
+  });
+  groupChatRoomRef.child(name).child("listOfHouses").child(house).update({
+    "likes": 0
+  });
+  create.addNotification(groupChatRoomRef, internRef, name, house + " was added to " + name.substring(1), ID);
+}
 
+function addNotification(groupChatRoomRef, internRef, name, notification, exception = 0000) {
   groupChatRoomRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
     snapshot.forEach(function(childSnapshot) {
-      internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").once("value").then(function(babySnapshot) {
-        if(babySnapshot.exists()) {
-          var count = babySnapshot.val().count;
-          count++;
-          internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
-            "count": count,
-            [count]: house + " was added to " + name.substring(1)
-          });
-        }
-        else {
-          var string = house + " was added to " + name.substring(1);
-          internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
-            "count": 1,
-            "1": string
-          });
-        }
-      });
+      if(exception == childSnapshot.val().substring(0, 4)) {}
+      else {
+        internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").once("value").then(function(babySnapshot) {
+          if(babySnapshot.exists()) {
+            var count = babySnapshot.val().count;
+            count++;
+            internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
+              "count": count,
+              [count]: notification
+            });
+          }
+          else {
+            internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
+              "count": 1,
+              "1": notification
+            });
+          }
+        });
+      }
     });
   });
 }
 
-function addNotification(groupChatRoomRef, internRef, notification, exception = 0000) {
-		groupChatRoomRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
-			snapshot.forEach(function(childSnapshot) {
-				if(exception == childSnapshot.val().substring(0, 4))
-					continue;
-				internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").once("value").then(function(babySnapshot) {
-					if(babySnapshot.exists()) {
-						var count = babySnapshot.val().count;
-						count++;
-						internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
-							"count": count,
-							[count]: notification
-						});
-					}
-					else {
-						internRef.child(childSnapshot.val().substring(0, 4)).child("listOfNotifications").update({
-							"count": 1,
-							"1": notification
-						});
-					}
-				});
-			});
-		});
-}
-
 function writeReview(houseRef, house, review) {
-		udpate.getSnapshot(houseRef, house, "listOfReviews", review);
-	}
+  udpate.getSnapshot(houseRef, house, "listOfReviews", review);
+}

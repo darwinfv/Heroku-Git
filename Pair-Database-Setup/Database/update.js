@@ -15,7 +15,8 @@
       updateEmployeeChatDetails,
       acceptInvite,
       acceptCompany,
-      denyCompany
+      denyCompany,
+      likeHouse
   }
 
   var update = require('./update.js');
@@ -286,5 +287,27 @@
       // companyRef.child(name).remove();
       companyRef.child(name).update({
           "verified": false
+      });
+  }
+
+  function likeHouse(groupChatRoomRef, name, house, ID, callback) {
+      groupChatRoomRef.child(name).child("listOfHouses").child(house).once("value").then(function(snapshot) {
+          var likes = snapshot.val().likes;
+          if(snapshot.val()[ID] != 1) {
+              likes++;
+              groupChatRoomRef.child(name).child("listOfHouses").child(house).update({
+                  [ID]: 1,
+                  "likes": likes
+              });
+              callback(true);
+          }
+          else {
+              likes--;
+              groupChatRoomRef.child(name).child("listOfHouses").child(house).update({
+                  [ID]: 0,
+                  "likes": likes
+              });
+              callback(false);
+          }
       });
   }
