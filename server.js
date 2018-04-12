@@ -1853,7 +1853,7 @@ app.post('/REMOVE-HOUSE', function (req, res) {
 // check for filters
 function checkFilters(house, filters) {
   if(isNaN(house.sqft) || house.sqft == "") {
-    return true;
+    return false;
   }
   var minsqft = parseFloat(filters.minsqft);
   var maxsqft = parseFloat(filters.maxsqft);
