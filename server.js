@@ -1,4 +1,4 @@
-houses//dependencies:
+//dependencies:
 //server dependencies
 const express = require('express');
 const app = express();
@@ -17,8 +17,6 @@ var update = require('./Pair-Database-Setup/Database/update.js');
 //setting up dtaabase
 var admin = require("firebase-admin");
 
-//setting up googleStorage
-const storageRef = require('@google-cloud/storage')
 /*const storage = googleStorage({
   projectId: "pair-ab7d0",
   keyFilename: "./pair-ab7d0-firebase-adminsdk-3wjxh-99b0bb40ab.json"
@@ -53,6 +51,25 @@ var houses = {};
 houses["CA"] = {};
 houses["NY"] = {};
 houses["TX"] = {};
+
+//filtered
+var filteredHouses = {};
+filteredHouses["CA"] = {};
+filteredHouses["NY"] = {};
+filteredHouses["TX"] = {};
+
+//previous filters
+var prevFilters = {
+  "minsqft": -1,
+  "maxsqft": -1,
+  "minPrice": -1,
+  "maxPrice": -1,
+  "minBedrooms": -1,
+  "maxBedrooms": -1,
+  "minBathrooms": -1,
+  "maxBathrooms": -1,
+  "state": ""
+};
 
 //addresses
 var addresses = {};
@@ -1652,7 +1669,7 @@ app.post('/GET-REVIEWS', function (req, res) {
   });
 });
 
-//get houses:
+//get houses
 app.post('/GET-HOUSES', function (req, res) {
   console.log("request received for getting house");
   console.log(req.body);
@@ -1664,7 +1681,7 @@ app.post('/GET-HOUSES', function (req, res) {
   temp["number"] = houses[state]["number"];
 
   var max = 20;
-  var start = offset*20;
+  var start = offset*20 + 1;
 
   if (start > temp["number"]) {
     res.json({
@@ -1699,6 +1716,186 @@ app.post('/GET-ALL-ADDRESSES', function (req, res) {
   res.send(addresses);
 });
 
+//filter houses
+app.post('/GET-FILTERED-HOUSES', function (req, res) {
+  console.log("request received for getting filtered house");
+  console.log(req.body);
+  var state = req.body.state;
+  var offsetString = req.body.offset;
+  var minsqft = req.body.minsqft;
+  var maxsqft = req.body.maxsqft;
+  var minPrice = req.body.minPrice;
+  var maxPrice = req.body.maxPrice;
+  var minBedrooms = req.body.minBedrooms;
+  var maxBedrooms = req.body.maxBedrooms;
+  var minBathrooms = req.body.minBathrooms;
+  var maxBathrooms = req.body.maxBathrooms;
+
+  var flag = true;
+
+  var currFilters = {
+    "minsqft": minsqft,
+    "maxsqft": maxsqft,
+    "minPrice": minPrice,
+    "maxPrice": maxPrice,
+    "minBedrooms": minBedrooms,
+    "maxBedrooms": maxBedrooms,
+    "minBathrooms": minBathrooms,
+    "maxBathrooms": maxBathrooms,
+    "state": state
+  };
+
+  if(!objectEquals(currFilters, prevFilters)) {
+    flag = false;
+    prevFilters = currFilters;
+    console.log("prevFilters != currFilters");
+  }
+
+  if(flag) {
+    var offset = parseInt(offsetString, 10);
+
+    var temp = {};
+    temp["number"] = filteredHouses[state]["number"];
+
+    var max = 20;
+    var start = offset*20 + 1;
+
+    if (start > temp["number"]) {
+      res.json({
+        "status": false,
+        "error": "Start number too high..."
+      });
+    }
+    else {
+      if ((start + 20) > temp["number"]) {
+        max = temp["number"] - start;
+      }
+
+      console.log("start:");
+      console.log(start);
+      console.log("number:");
+      console.log(max);
+
+      var j = 1;
+      for (var i = start; i < (start+max); i++) {
+        temp[j] = filteredHouses[state][i];
+        j++;
+      }
+      temp["included"] = j-1;
+      res.send(temp);
+    }
+  }
+  else {
+      var j = 1;
+      console.log("start filtering once");
+      for (var i = 1; i < houses[state]["number"]; i++) {
+        //checking filters
+        //console.log("Printing ith house");
+        //console.log(houses[state][i]);
+        if(checkFilters(houses[state][i], currFilters)) {
+          filteredHouses[j] = houses[state][i];
+          j++;
+          //console.log(j);
+        }
+        filteredHouses["number"] = (j-1);
+      }
+
+      var offset = parseInt(offsetString, 10);
+
+      var temp = {};
+      //console.log("hahahahahahahaha");
+      temp["number"] = filteredHouses["number"];
+
+      var max = 20;
+      var start = offset*20 + 1;
+
+      if (start > temp["number"]) {
+        res.json({
+          "status": false,
+          "error": "Start number too high..."
+        });
+      }
+      else {
+        if ((start + 20) > temp["number"]) {
+          max = temp["number"] - start;
+        }
+
+        console.log("start:");
+        console.log(start);
+        console.log("number:");
+        console.log(max);
+
+        var j = 1;
+        for (var i = start; i < (start+max); i++) {
+          console.log("returning house:");
+          console.log(filteredHouses[i]);
+          temp[j] = filteredHouses[i];
+          j++;
+        }
+        temp["included"] = j-1;
+        res.send(temp);
+    }
+  }
+});
+
+//remove a saved house:
+app.post('/REMOVE-HOUSE', function (req, res) {
+  console.log("request received for removing house");
+  console.log(req.body);
+  var house = req.body.house;
+  var name = req.body.name;
+  update.removeHouse(groupChatRoomRef, houseRef, name, house);
+  res.json({
+    "status": true
+  })
+});
+
+// check for filters
+function checkFilters(house, filters) {
+  if(isNaN(house.sqft) || house.sqft == "") {
+    return true;
+  }
+  var minsqft = parseFloat(filters.minsqft);
+  var maxsqft = parseFloat(filters.maxsqft);
+  var minPrice = parseFloat(filters.minPrice);
+  var maxPrice = parseFloat(filters.maxPrice);
+  var minBedrooms = parseFloat(filters.minBedrooms);
+  var maxBedrooms = parseFloat(filters.maxBedrooms);
+  var minBathrooms = parseFloat(filters.minBathrooms);
+  var maxBathrooms = parseFloat(filters.maxBathrooms);
+
+  var bedroom = parseFloat(house.bedrooms);
+  var bathroom = parseFloat(house.bathrooms);
+  var sqft = parseFloat(house.sqft);
+  var price = parseFloat(house.price);
+
+  if (bedroom < minBedrooms || bedroom > maxBedrooms) {
+    // console.log("bedrooms");
+    return false;
+  }
+  if (bathroom < minBathrooms || bathroom > maxBathrooms) {
+    // console.log("bathrooms");
+    return false;
+  }
+  if (sqft < minsqft || sqft > maxsqft) {
+    // console.log("sqft");
+    return false;
+  }
+  if (price < minPrice || price > maxPrice) {
+    /* console.log("\nprice");
+    console.log("minPrice:");
+    console.log(minPrice);
+    console.log("maxPrice");
+    console.log(maxPrice);
+    console.log("price");
+    console.log(price);*/
+    return false;
+  }
+
+  return true;
+}
+
+//parse houses
 function parseHouses(state) {
   read.getHouses(houseRef, state, (x) => {
     var number = 1;
@@ -1721,6 +1918,7 @@ function parseHouses(state) {
   });
 }
 
+//parse all addresses
 function parseAddresses(states) {
   for (var i in states) {
     var state = states[i];
@@ -1751,6 +1949,31 @@ function  testZillow() {
 //empty jsons
 function isEmptyObject(obj) {
   return !Object.keys(obj).length;
+}
+
+//check if any two objcts are equal:
+function objectEquals(x, y) {
+
+  // if both are function
+  if (x instanceof Function) {
+      if (y instanceof Function) {
+          return x.toString() === y.toString();
+      }
+      return false;
+  }
+  if (x === null || x === undefined || y === null || y === undefined) { return x === y; }
+  if (x === y || x.valueOf() === y.valueOf()) { return true; }
+
+  // if one of them is date, they must had equal valueOf
+  if (x instanceof Date) { return false; }
+  if (y instanceof Date) { return false; }
+
+  // if they are not function or strictly equal, they both need to be Objects
+  if (!(x instanceof Object)) { return false; }
+  if (!(y instanceof Object)) { return false; }
+    var p = Object.keys(x);
+  return Object.keys(y).every(function (i) { return p.indexOf(i) !== -1; }) ?
+  p.every(function (i) { return objectEquals(x[i], y[i]); }) : false;
 }
 
 //actual main function
