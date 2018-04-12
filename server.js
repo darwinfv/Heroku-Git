@@ -1647,11 +1647,8 @@ app.post('/GET-REVIEWS', function (req, res) {
   console.log("request received for getting");
   console.log(req.body);
   var house = req.body.house;
-  update.likeHouse(houseRef, house, (x) => {
-    res.json({
-      "status": true,
-      "liked": x
-    })
+  read.getReviews(houseRef, house, (x) => {
+    res.send(x);
   });
 });
 
