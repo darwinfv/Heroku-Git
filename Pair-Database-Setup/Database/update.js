@@ -16,7 +16,8 @@
       acceptInvite,
       acceptCompany,
       denyCompany,
-      likeHouse
+      likeHouse,
+      removeHouse
   }
 
   var update = require('./update.js');
@@ -311,3 +312,16 @@
           }
       });
   }
+
+  function removeHouse(groupChatRoomRef, houseRef, name, house) {
+        groupChatRoomRef.child(name).child("listOfHouses").child(house).remove();
+        var split = key.split(" ");
+        var state = split[split.length - 2];
+        var zip = split[split.length - 1];
+        houseRef.child(state).child(zip).child(house).once("value").then(function(snapshot) {
+            snapshot.forEach(function(childSnapshot) {
+                if(childSnapshot.val() == name)
+                    houseRef.child(state).child(zip).child(house).child(childSnapshot.key).remove();
+            });
+        });
+    }

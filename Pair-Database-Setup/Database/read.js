@@ -411,9 +411,12 @@
 	}
 
 	function getReviews(houseRef, house, callback) {
+    var split = house.split(" ");
+    var state = split[split.length - 2];
+    var zip = split[split.length - 1];
 		var list = {};
 		var i = 0;
-		houseRef.child(house).child("listOfReviews").once("value").then(function(snapshot) {
+		houseRef.child(state).child(zip).child(house).child("listOfReviews").once("value").then(function(snapshot) {
 			snapshot.forEach(function(childSnapshot) {
 				list[i] = childSnapshot.val();
 				i++;

@@ -392,5 +392,8 @@ function addNotification(groupChatRoomRef, internRef, name, notification, except
 }
 
 function writeReview(houseRef, house, review) {
-  udpate.getSnapshot(houseRef, house, "listOfReviews", review);
+  var split = house.split(" ");
+  var state = split[split.length - 2];
+  var zip = split[split.length - 1];
+	update.getSnapshot(houseRef.child(state).child(zip), house, "listOfReviews", review);
 }
