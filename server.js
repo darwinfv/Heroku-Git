@@ -1,4 +1,4 @@
-//dependencies:
+houses//dependencies:
 //server dependencies
 const express = require('express');
 const app = express();
@@ -47,10 +47,16 @@ var allowCrossDomain = function(req, res, next) {
 };
 app.use(allowCrossDomain);
 
-var Houses = {};
-Houses["CA"] = {};
-Houses["NY"] = {};
-Houses["TX"] = {};
+
+//houses
+var houses = {};
+houses["CA"] = {};
+houses["NY"] = {};
+houses["TX"] = {};
+
+//addresses
+var addresses = {};
+
 
 //uncomment if first time
 //var firebase_app = admin.initializeApp();
@@ -1654,34 +1660,83 @@ app.post('/GET-HOUSES', function (req, res) {
   console.log("request received for getting house");
   console.log(req.body);
   var state = req.body.state;
-  read.getHouses(houseRef,state, (x) => {
-    res.send(Houses[state]);
-  });
+  var offsetString = req.body.offset;
+  var offset = parseInt(offsetString, 10);
+
+  var temp = {};
+  temp["number"] = houses[state]["number"];
+
+  var max = 20;
+  var start = offset*20;
+
+  if (start > temp["number"]) {
+    res.json({
+      "status": false,
+      "error": "Start number too high..."
+    });
+  }
+  else {
+    if ((start + 20) > temp["number"]) {
+      max = temp["number"] - start;
+    }
+
+    console.log("start:");
+    console.log(start);
+    console.log("number:");
+    console.log(max);
+
+    var j = 1;
+    for (var i = start; i < (start+max); i++) {
+      temp[j] = houses[state][i];
+      j++;
+    }
+    temp["included"] = j-1;
+    res.send(temp);
+  }
 });
 
+//get all addresses
+app.post('/GET-ALL-ADDRESSES', function (req, res) {
+  console.log("request recieved");
+  console.log(req.body);
+  res.send(addresses);
+});
 
 function parseHouses(state) {
-    read.getHouses(houseRef, state, (x) => {
-      var number = 1;
-      //have a foreach loop to go through all the states:
-      for (var zip in x) {
+  read.getHouses(houseRef, state, (x) => {
+    var number = 1;
+    //have a foreach loop to go through all the states:
+    for (var zip in x) {
 
-        //have a loop that goes through all address in a ZIP
-        for (var addr in x[zip]) {
-          Houses[state][number] = {
+      //have a loop that goes through all address in a ZIP
+      for (var addr in x[zip]) {
+        houses[state][number] = {
             "address": addr
-          }
-
+        }
           //get all attributes in the house
           for (var attributes in x[zip][addr]) {
-            Houses[state][number][attributes] = x[zip][addr][attributes];
-          }
+          houses[state][number][attributes] = x[zip][addr][attributes];
+        }
+          number++;
+      }
+    }
+    houses[state]["number"] = number;
+  });
+}
 
+function parseAddresses(states) {
+  for (var i in states) {
+    var state = states[i];
+    var number = 1;
+    read.getHouses(houseRef, state, (x) => {
+      for (var zip in x) {
+        for (var address in x[zip]) {
+          addresses[number] = address;
           number++;
         }
       }
-      Houses[state]["number"] = number;
     });
+  }
 }
 
 //test zillow
@@ -1725,6 +1780,11 @@ app.listen(port, function () {
   console.log("End parsing TX");
 
   console.log("Done parsing houses");
+
+  console.log("Parse all addresses");
+  states = ["CA", "TX", "NY"];
+  parseAddresses(states);
+  console.log("Done parsing addresses");
 
 
   console.log('Database setup done');
