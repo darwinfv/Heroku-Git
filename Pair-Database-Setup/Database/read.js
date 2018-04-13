@@ -24,7 +24,9 @@
 		verifyUserChatroom,
 		getNotifications,
 		getReviews,
-		getHouses
+		getHouses,
+		getSavedHouses,
+		getBlockedUsers
 	}
 
 	function getMasterListOfInterns(internRef, company, callback) {
@@ -170,6 +172,12 @@
 			var i = 0;
 			snapshot.child("listOfChatRooms").forEach(function(childSnapshot) {
 				list["listOfChatRooms"][i] = childSnapshot.val();
+				i++;
+			});
+			i = 0;
+			list["listOfBlockedUsers"] = {};
+			snapshot.child("listOfBlockedUsers").forEach(function(childSnapshot) {
+				list["listOfBlockedUsers"][i] = childSnapshot.val();
 				i++;
 			});
 			callback(list);
@@ -411,9 +419,9 @@
 	}
 
 	function getReviews(houseRef, house, callback) {
-    var split = house.split(" ");
-    var state = split[split.length - 2];
-    var zip = split[split.length - 1];
+		var split = house.split(" ");
+    	var state = split[split.length - 2];
+    	var zip = split[split.length - 1];
 		var list = {};
 		var i = 0;
 		houseRef.child(state).child(zip).child(house).child("listOfReviews").once("value").then(function(snapshot) {
@@ -428,5 +436,42 @@
 	function getHouses(houseRef, state, callback) {
 		houseRef.child(state).once("value").then(function(snapshot) {
 			callback(snapshot.val());
+		});
+	}
+
+	function getSavedHouses(groupChatRoomRef, houseRef, name, callback) {
+		var list = {};
+		//orderByChild("likes")
+		groupChatRoomRef.child(name).child("listOfHouses").once("value").then(function(snapshot) {
+			list = snapshot.val();
+			var size = Object.keys(list).length;
+			var i = 0;
+			for (var key in list) {
+			    if (list.hasOwnProperty(key)) {
+		    		var split = key.split(" ");
+			    	var state = split[split.length - 2];
+			    	var zip = split[split.length - 1];
+					houseRef.child(state).child(zip).child(key).once("value").then(function(childSnapshot) {
+						var likes = list[key]["likes"];
+						list[key] = childSnapshot.val();
+						list[key]["likes"] = likes;
+						i++;
+						if(i == size)
+							callback(list);
+					});
+			    }
+			}
+		});
+	}
+
+	function getBlockedUsers(internRef, ID, callback) {
+		var list = {};
+		var i = 0;
+		internRef.child(ID).child("listOfBlockedUsers").once("value").then(function(snapshot) {
+			snapshot.forEach(function(childSnapshot) {
+				list[i] = childSnapshot.val();
+				i++;
+			});
+			callback(list);
 		});
 	}

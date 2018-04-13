@@ -13,14 +13,15 @@ module.exports = {
   addInternToCompanyChat,
   createGroupChat,
   addToGroupChat,
-  createPrivateChat,
   createEmployeeChat,
+  createPrivateChat,
   addMessageToChat,
   createComplaint,
   createHouse,
   addHouse,
   addNotification,
   writeReview,
+  blockUser
 }
 
 var update = require('./update.js');
@@ -42,7 +43,7 @@ function createCompany(adminRef, companyRef, companyName, email, password, listO
     update.getSnapshot(adminRef, 4000, "listOfCompanies", companyName);
   }
 
-function createIntern(internRef, id, email, company, location = "novalue") {
+  function createIntern(internRef, id, email, company, location = "novalue") {
     internRef.update({
       [id]:"novalue"
     });
@@ -58,7 +59,7 @@ function createIntern(internRef, id, email, company, location = "novalue") {
     });
   }
 
-function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
+  function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
     employeeRef.update({
       [id]:"novalue"
     });
@@ -79,13 +80,13 @@ function createEmployee(employeeRef, companyRef, id, firstName, lastName, passwo
     update.updateCompany(companyRef, company, firstName + " " + lastName);
   }
 
-function createPassword(relevantRef, ID, password) {
+  function createPassword(relevantRef, ID, password) {
     relevantRef.child(ID).update({
       "password": password
     });
   }
 
-function createBasicPreferences(internRef, ID, firstName, lastName, description, fbLink, twitterLink, linkedin) {
+  function createBasicPreferences(internRef, ID, firstName, lastName, description, fbLink, twitterLink, linkedin) {
     internRef.child(ID).child('basic').update({
     "description": description,
     "fbLink": fbLink,
@@ -119,15 +120,16 @@ function createHousingPreferences(internRef, ID, price, roommates, distance, dur
   });
 }
 
-function createProfilePicture(storageRef, relevantRef, ID, image) {
-    var imageRef = relevantRef.child(ID).child("images");
+  function createProfilePicture(storageRef, relevantRef, ID, image) {
+  var imageRef = relevantRef.child(ID).child("images");
     storageRef.child(ID + "/").getDownloadURL().then(function(url) {
         imageRef.child("image").set(url);
     });
     var task = storageRef.child(ID + "/").putString(image, 'base64').then(function(snapshot) {
          console.log('Uploaded a base64 string!');
     });
-  }
+}
+
 
 function addToLocationChat(locationChatRoomRef, internRef, location, user) {
   var item = user + "$:$";
@@ -366,6 +368,7 @@ function addHouse(groupChatRoomRef, houseRef, internRef, name, ID, house) {
 }
 
 function addNotification(groupChatRoomRef, internRef, name, notification, exception = 0000) {
+  //check group exits
   groupChatRoomRef.child(name).child("listOfUsers").once("value").then(function(snapshot) {
     snapshot.forEach(function(childSnapshot) {
       if(exception == childSnapshot.val().substring(0, 4)) {}
@@ -395,5 +398,9 @@ function writeReview(houseRef, house, review) {
   var split = house.split(" ");
   var state = split[split.length - 2];
   var zip = split[split.length - 1];
-	update.getSnapshot(houseRef.child(state).child(zip), house, "listOfReviews", review);
+  update.getSnapshot(houseRef.child(state).child(zip), house, "listOfReviews", review);
+}
+
+function blockUser(internRef, ID, blockID) {
+  update.getSnapshot(internRef, ID, "listOfBlockedUsers", blockID);
 }

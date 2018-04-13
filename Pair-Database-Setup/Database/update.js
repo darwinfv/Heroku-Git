@@ -17,7 +17,8 @@
       acceptCompany,
       denyCompany,
       likeHouse,
-      removeHouse
+      removeHouse,
+      unblockUser
   }
 
   var update = require('./update.js');
@@ -109,7 +110,7 @@
 
   function removeIntern(internRef, chatRoomRef, ID) {
       var rooms = [];
-      internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
+  internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
           snapshot.forEach(function(childSnapshot) {
               rooms.push(childSnapshot.val());
           });
@@ -285,7 +286,7 @@
   }
 
   function denyCompany(companyRef, name) {
-      // companyRef.child(name).remove();
+    // companyRef.child(name).remove();
       companyRef.child(name).update({
           "verified": false
       });
@@ -314,14 +315,25 @@
   }
 
   function removeHouse(groupChatRoomRef, houseRef, name, house) {
-        groupChatRoomRef.child(name).child("listOfHouses").child(house).remove();
-        var split = key.split(" ");
-        var state = split[split.length - 2];
-        var zip = split[split.length - 1];
-        houseRef.child(state).child(zip).child(house).once("value").then(function(snapshot) {
-            snapshot.forEach(function(childSnapshot) {
-                if(childSnapshot.val() == name)
-                    houseRef.child(state).child(zip).child(house).child(childSnapshot.key).remove();
-            });
-        });
-    }
+      groupChatRoomRef.child(name).child("listOfHouses").child(house).remove();
+      var split = key.split(" ");
+      var state = split[split.length - 2];
+      var zip = split[split.length - 1];
+      houseRef.child(state).child(zip).child(house).once("value").then(function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+              if(childSnapshot.val() == name) {
+                  houseRef.child(state).child(zip).child(house).child(childSnapshot.key).remove();
+                  return true;
+              }
+          });
+      });
+  }
+
+  function unblockUser(internRef, ID, blockID) {
+      internRef.child(ID).child("listOfBlockedUsers").once("value").then(function(snapshot) {
+          snapshot.forEach(function(childSnapshot) {
+              if(childSnapshot.val() == blockID)
+                  internRef.child(ID).child("listOfBlockedUsers").child(childSnapshot.key).remove();
+          });
+      });
+  }
