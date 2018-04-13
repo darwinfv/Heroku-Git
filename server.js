@@ -1838,7 +1838,7 @@ app.post('/GET-FILTERED-HOUSES', function (req, res) {
   }
 });
 
-//remove a saved house:
+// remove a saved house:
 app.post('/REMOVE-HOUSE', function (req, res) {
   console.log("request received for removing house");
   console.log(req.body);
@@ -1849,6 +1849,50 @@ app.post('/REMOVE-HOUSE', function (req, res) {
     "status": true
   })
 });
+
+// get blocked users
+app.post('/GET-BLOCKED-USERS', function (req, res) {
+  console.log('Recieved request for getting blocked users');
+  console.log(req.body);
+  var uid = req.body.userID;
+  read.getBlockedUsers(internRef, uid, (x) => {
+    res.send(x);
+  });
+})
+
+// get a list of saved houses:
+app.post('/GET-SAVED-HOUSES', function (req, res) {
+  console.log('Received request for getting saved houses');
+  console.log(req.body);
+  var uid = req.body.uid;
+  read.getSavedHouses(internRef, uid, (x) => {
+    res.send(x);
+  });
+})
+
+//block an intern by another intern
+app.post('/BLOCK-USER', function (req, res) {
+  console.log('Request recieved for blocking an intern');
+  console.log(req.body);
+  create.blockUser(internRef, blocker, blocking);
+  var blocker = req.body.blocker;
+  var blocking = req.body.blocking;
+  res.json({
+    "status": true
+  });
+})
+
+//unblock an intern
+app.post('/UNBLOCK-USER', function (req, res) {
+  console.log('request received for unblocking user');
+  console.log(req.body);
+  var blocker = req.body.blocker;
+  var blocking = req.body.blocking;
+  update.unblockUser(internRef, blocker, blocking);
+  res.json({
+    'status': true
+  })
+})
 
 // check for filters
 function checkFilters(house, filters) {
