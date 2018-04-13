@@ -1755,7 +1755,7 @@ app.post('/GET-FILTERED-HOUSES', function (req, res) {
     var offset = parseInt(offsetString, 10);
 
     var temp = {};
-    temp["number"] = filteredHouses[state]["number"];
+    temp["number"] = filteredHouses["number"];
 
     var max = 20;
     var start = offset*20 + 1;
@@ -1778,7 +1778,7 @@ app.post('/GET-FILTERED-HOUSES', function (req, res) {
 
       var j = 1;
       for (var i = start; i < (start+max); i++) {
-        temp[j] = filteredHouses[state][i];
+        temp[j] = filteredHouses[i];
         j++;
       }
       temp["included"] = j-1;
