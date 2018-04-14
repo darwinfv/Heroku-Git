@@ -626,7 +626,8 @@ app.post('/CREATE-INTERN', function (req, res) {
   console.log(uid);
   var location = req.body.location;
   var company = req.body.company;
-  create.createIntern(internRef, uid, req.body.username, company, location);
+  var endDate = req.body.endDate;
+  create.createIntern(internRef, uid, req.body.username, company, endDate, location);
   create.createBasicPreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined", "undefined", "undefined");
   create.createRoommatePreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined");
   create.createHousingPreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined");
@@ -1307,6 +1308,10 @@ app.post('/REMOVE-FROM-CHAT', function (req, res) {
   else
   {
     update.removeFromChat(correctRef, internRef, name, uid);
+    read.getIntern(internRef, uid, (x) => {
+      create.addNotification(correctRef, internRef, x.firstName + " " + x.lastName + " has left " + name + " chat.");
+    })
+
     res.json({
       "status": true
     });
@@ -1864,8 +1869,8 @@ app.post('/GET-BLOCKED-USERS', function (req, res) {
 app.post('/GET-SAVED-HOUSES', function (req, res) {
   console.log('Received request for getting saved houses');
   console.log(req.body);
-  var uid = req.body.uid;
-  read.getSavedHouses(internRef, uid, (x) => {
+  var name = req.body.name;
+  read.getSavedHouses(groupChatRoomRef, houseRef, name, (x) => {
     res.send(x);
   });
 })
