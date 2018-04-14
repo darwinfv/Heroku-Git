@@ -41,6 +41,7 @@
     				master[key]["email"] = childSnapshot.val().email;
     				master[key]["location"] = childSnapshot.val().lcoation;
     				master[key]["phone"] = childSnapshot.val().phone;
+    				master[key]["endDate"] = childSnapshot.val().endDate;
     			}
     		});
     		callback(master);

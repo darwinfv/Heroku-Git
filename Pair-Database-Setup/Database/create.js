@@ -13,8 +13,8 @@ module.exports = {
   addInternToCompanyChat,
   createGroupChat,
   addToGroupChat,
-  createEmployeeChat,
   createPrivateChat,
+  createEmployeeChat,
   addMessageToChat,
   createComplaint,
   createHouse,
@@ -41,63 +41,64 @@ function createCompany(adminRef, companyRef, companyName, email, password, listO
       "verified": "pending"
     });
     update.getSnapshot(adminRef, 4000, "listOfCompanies", companyName);
-  }
+}
 
-  function createIntern(internRef, id, email, company, location = "novalue") {
-    internRef.update({
-      [id]:"novalue"
-    });
-    internRef.child(id).update({
-      "email": email,
-      "company": company,
-      "location": location,
-      "listOfChatRooms": [2 + location, 1 + company + ", " + location],
-      "ban": false
-    });
-    internRef.child(id).child("images").update({
-      "image": "undefined"
-    });
-  }
+function createIntern(internRef, id, email, company, endDate, location = "novalue") {
+  internRef.update({
+    [id]:"novalue"
+  });
+  internRef.child(id).update({
+    "email": email,
+    "company": company,
+    "location": location,
+    "listOfChatRooms": [2 + location, 1 + company + ", " + location],
+    "endDate": endDate,
+    "ban": false
+  });
+  internRef.child(id).child("images").update({
+    "image": "undefined"
+  });
+}
 
-  function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
-    employeeRef.update({
-      [id]:"novalue"
-    });
-    employeeRef.child(id).update({
-      "firstName": firstName,
-      "lastName": lastName,
+function createEmployee(employeeRef, companyRef, id, firstName, lastName, password, email, company, location, description, facebook, linkedin, twitter) {
+  employeeRef.update({
+    [id]:"novalue"
+  });
+  employeeRef.child(id).update({
+    "firstName": firstName,
+    "lastName": lastName,
     "password": password,
-      "email": email,
-      "company": company,
-      "description": description,
-      "location": location,
-      "links": [facebook, linkedin, twitter],
-      "listOfChatRooms": [1 + company + ", " + location]
-    });
-    employeeRef.child(id).child("images").update({
-      "image": "undefined"
-    });
-    update.updateCompany(companyRef, company, firstName + " " + lastName);
-  }
-
-  function createPassword(relevantRef, ID, password) {
-    relevantRef.child(ID).update({
-      "password": password
-    });
-  }
-
-  function createBasicPreferences(internRef, ID, firstName, lastName, description, fbLink, twitterLink, linkedin) {
-    internRef.child(ID).child('basic').update({
+    "email": email,
+    "company": company,
     "description": description,
-    "fbLink": fbLink,
-    "twitterLink": twitterLink,
-    "linkedInLink": linkedin
-    });
-    update.updateIntern(internRef, ID, firstName, lastName, "novalue");
+    "location": location,
+    "links": [facebook, linkedin, twitter],
+    "listOfChatRooms": [1 + company + ", " + location]
+  });
+  employeeRef.child(id).child("images").update({
+    "image": "undefined"
+  });
+  update.updateCompany(companyRef, company, firstName + " " + lastName);
+}
+
+function createPassword(relevantRef, ID, password) {
+  relevantRef.child(ID).update({
+    "password": password
+  });
+}
+
+function createBasicPreferences(internRef, ID, firstName, lastName, description, fbLink, twitterLink, linkedin) {
+  internRef.child(ID).child('basic').update({
+  "description": description,
+  "fbLink": fbLink,
+  "twitterLink": twitterLink,
+  "linkedInLink": linkedin
+  });
+  update.updateIntern(internRef, ID, firstName, lastName, "novalue");
 }
 
 function createRoommatePreferences(internRef, ID, youguest, themguest, youpet, thempet, sharing, smoke, bedtime, waketime, lights, clean) {
-    internRef.child(ID).child('roommate').update({
+  internRef.child(ID).child('roommate').update({
     "youguest": youguest,
     "themguest": themguest,
     "youpet": youpet,
@@ -112,24 +113,23 @@ function createRoommatePreferences(internRef, ID, youguest, themguest, youpet, t
 }
 
 function createHousingPreferences(internRef, ID, price, roommates, distance, duration) {
-    internRef.child(ID).child('housing').update({
-      "desiredPrice": price,
-        "desiredRoommate": roommates,
-        "desiredDistance": distance,
-        "desiredDuration": duration
+  internRef.child(ID).child('housing').update({
+    "desiredPrice": price,
+    "desiredRoommate": roommates,
+    "desiredDistance": distance,
+    "desiredDuration": duration
   });
 }
 
-  function createProfilePicture(storageRef, relevantRef, ID, image) {
+function createProfilePicture(storageRef, relevantRef, ID, image) {
   var imageRef = relevantRef.child(ID).child("images");
     storageRef.child(ID + "/").getDownloadURL().then(function(url) {
         imageRef.child("image").set(url);
-    });
-    var task = storageRef.child(ID + "/").putString(image, 'base64').then(function(snapshot) {
-         console.log('Uploaded a base64 string!');
-    });
+  });
+  var task = storageRef.child(ID + "/").putString(image, 'base64').then(function(snapshot) {
+     console.log('Uploaded a base64 string!');
+  });
 }
-
 
 function addToLocationChat(locationChatRoomRef, internRef, location, user) {
   var item = user + "$:$";
@@ -402,5 +402,5 @@ function writeReview(houseRef, house, review) {
 }
 
 function blockUser(internRef, ID, blockID) {
-  update.getSnapshot(internRef, ID, "listOfBlockedUsers", blockID);
+  getSnapshot(internRef, ID, "listOfBlockedUsers", blockID);
 }
