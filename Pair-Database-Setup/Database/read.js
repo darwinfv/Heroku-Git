@@ -431,10 +431,7 @@
 				list[i] = childSnapshot.val();
 				i++;
 			});
-			houseRef.child(state).child(zip).child(house).once("value").then(function(babySnapshot) {
-				list["count"] = babySnapshot.val().count;
-				callback(list);
-			});
+			callback(list);
 		});
 	}
 
@@ -445,13 +442,13 @@
 	}
 
 	function getSavedHouses(groupChatRoomRef, houseRef, name, callback) {
-		var list = {};
+    var list = {};
 		//orderByChild("likes")
 		groupChatRoomRef.child(name).child("listOfHouses").once("value").then(function(snapshot) {
 			list = snapshot.val();
 			var size = Object.keys(list).length;
 			var i = 0;
-			for (var key in list) {
+			Object.keys(list).forEach(function(key) {
 			    if (list.hasOwnProperty(key)) {
 		    		var split = key.split(" ");
 			    	var state = split[split.length - 2];
@@ -465,7 +462,7 @@
 							callback(list);
 					});
 			    }
-			}
+			});
 		});
 	}
 
