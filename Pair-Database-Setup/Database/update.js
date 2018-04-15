@@ -22,6 +22,7 @@
   }
 
   var update = require('./update.js');
+  var create = require('./create.js');
 
   function getSnapshot(relevantRef, childName, itemName, newValue) {
     var ref = relevantRef.child(childName).child(itemName);
