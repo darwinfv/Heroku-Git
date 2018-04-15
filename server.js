@@ -1871,7 +1871,25 @@ app.post('/GET-SAVED-HOUSES', function (req, res) {
   console.log(req.body);
   var name = req.body.name;
   read.getSavedHouses(groupChatRoomRef, houseRef, name, (x) => {
-    res.send(x);
+    // res.send(x);
+    var arr = [];
+    var i = 0;
+    for (var addr in x) {
+      arr[i] = x[addr];
+      arr[i]["addressTemp"] = addr;
+      i = i + 1;
+    }
+    arr.sort( function (a, b) {
+      return parseInt(a.likes.likes,10) - parseInt(b,10)
+    });
+    var ordered = {};
+    for (var index in arr) {
+      ordered[arr[index]["addressTemp"]] = {};
+      for (var attr in arr[index]) {
+        ordered[arr[index]["addressTemp"]][attr] = arr[index][attr];
+      }
+    }
+    res.send(ordered)
   });
 })
 
