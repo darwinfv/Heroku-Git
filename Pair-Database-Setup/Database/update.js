@@ -176,6 +176,9 @@
               }
           });
       });
+      internRef.child(ID).once("value").then(function(snapshot) {
+          addNotification(groupChatRoomRef, internRef, name, snapshot.val().firstName + " " + snapshot.val().lastName + " has left " + name.substringg(1), ID);
+      });
   }
 
   function banIntern(internRef, ID) {
@@ -271,6 +274,7 @@
       chatRoomRef.child(name).child("listOfInvites").update({
           [ID]: true
       });
+      // create.addNotification(chatRoomRef, )
   }
 
   function acceptCompany(adminRef, companyRef, name) {
