@@ -1849,7 +1849,8 @@ app.post('/REMOVE-HOUSE', function (req, res) {
   console.log(req.body);
   var house = req.body.house;
   var name = req.body.name;
-  update.removeHouse(groupChatRoomRef, houseRef, name, house);
+  var uid = req.body.userID;
+  update.removeHouse(groupChatRoomRef, houseRef, internRef, name, uid, house);
   res.json({
     "status": true
   })
