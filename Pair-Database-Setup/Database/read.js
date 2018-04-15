@@ -431,7 +431,10 @@
 				list[i] = childSnapshot.val();
 				i++;
 			});
-			callback(list);
+			houseRef.child(state).child(zip).child(house).once("value").then(function(babySnapshot) {
+				list["count"] = babySnapshot.val().count;
+				callback(list);
+			});
 		});
 	}
 
