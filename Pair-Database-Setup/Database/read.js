@@ -42,6 +42,7 @@
     				master[key]["location"] = childSnapshot.val().lcoation;
     				master[key]["phone"] = childSnapshot.val().phone;
     				master[key]["endDate"] = childSnapshot.val().endDate;
+            master[key]["startDate"]  = childSnapshot.val().startDate;
     			}
     		});
     		callback(master);
@@ -155,6 +156,7 @@
 			list["phone"] = snapshot.val().phone;
 			list["banned"] = snapshot.val().ban;
 			list["endDate"] = snapshot.val().endDate;
+      list["startDate"] = snapshot.val().startDate;
 			list["basic"] = {};
 			snapshot.child("basic").forEach(function(childSnapshot) {
 				list["basic"][childSnapshot.key] = childSnapshot.val();

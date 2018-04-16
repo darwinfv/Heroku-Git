@@ -110,8 +110,8 @@
   }
 
   function removeIntern(internRef, chatRoomRef, ID) {
-      var rooms = [];
-  internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
+    var rooms = [];
+    internRef.child(ID).child("listOfChatRooms").once("value").then(function(snapshot) {
           snapshot.forEach(function(childSnapshot) {
               rooms.push(childSnapshot.val());
           });
