@@ -627,7 +627,8 @@ app.post('/CREATE-INTERN', function (req, res) {
   var location = req.body.location;
   var company = req.body.company;
   var endDate = req.body.endDate;
-  create.createIntern(internRef, uid, req.body.username, company, endDate, location);
+  var startDate = req.body.startDate;
+  create.createIntern(internRef, uid, req.body.username, company, endDate, startDate, location);
   create.createBasicPreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined", "undefined", "undefined");
   create.createRoommatePreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined");
   create.createHousingPreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined");
@@ -1309,7 +1310,7 @@ app.post('/REMOVE-FROM-CHAT', function (req, res) {
   {
     update.removeFromChat(correctRef, internRef, name, uid);
     read.getIntern(internRef, uid, (x) => {
-      create.addNotification(correctRef, internRef, x.firstName + " " + x.lastName + " has left " + name + " chat.");
+      create.addNotification(correctRef, internRef, name, x.firstName + " " + x.lastName + " has left " + name + " chat.", uid);
     })
 
     res.json({
