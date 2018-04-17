@@ -24,6 +24,16 @@
   var update = require('./update.js');
   var create = require('./create.js');
 
+  /*
+    / @brief this function retrieves the already existent
+    /        items from a list and adds the new ones to it
+    /        can be used to update lists and arrays
+    /
+    / @param relevantRef a reference to the appropriate object header
+    / @param childName the name of the object you want to update
+    / @param itemName the item you want to update
+    / @param newValue the values you want to add
+    */
   function getSnapshot(relevantRef, childName, itemName, newValue) {
     var ref = relevantRef.child(childName).child(itemName);
     var oldlist = [];
@@ -116,8 +126,8 @@
               rooms.push(childSnapshot.val());
           });
           internRef.child(ID).remove();
-          var ref;
           rooms.forEach(function(entry) {
+              let ref;
               if(entry[0] == 1)
                   ref = chatRoomRef.child("Company");
               else if(entry[0] == 2)
