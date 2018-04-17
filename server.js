@@ -1899,9 +1899,9 @@ app.post('/GET-SAVED-HOUSES', function (req, res) {
 app.post('/BLOCK-USER', function (req, res) {
   console.log('Request recieved for blocking an intern');
   console.log(req.body);
-  create.blockUser(internRef, blocker, blocking);
   var blocker = req.body.blocker;
   var blocking = req.body.blocking;
+  create.blockUser(internRef, blocker, blocking);
   res.json({
     "status": true
   });
