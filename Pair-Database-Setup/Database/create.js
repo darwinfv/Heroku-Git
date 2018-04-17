@@ -427,5 +427,5 @@ function writeReview(houseRef, house, review) {
 }
 
 function blockUser(internRef, ID, blockID) {
-  getSnapshot(internRef, ID, "listOfBlockedUsers", blockID);
+  update.getSnapshot(internRef, ID, "listOfBlockedUsers", blockID);
 }
