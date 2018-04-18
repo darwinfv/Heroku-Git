@@ -1310,7 +1310,7 @@ app.post('/REMOVE-FROM-CHAT', function (req, res) {
   {
     update.removeFromChat(correctRef, internRef, name, uid);
     read.getIntern(internRef, uid, (x) => {
-      create.addNotification(correctRef, internRef, name, x.firstName + " " + x.lastName + " has left " + name.substring(1) + " chat.", uid);
+      create.addNotification(correctRef, internRef, name, x.firstName + " " + x.lastName + " has left " + name + " chat.", uid);
     })
 
     res.json({
@@ -1882,7 +1882,7 @@ app.post('/GET-SAVED-HOUSES', function (req, res) {
       i = i + 1;
     }
     arr.sort( function (a, b) {
-      return parseInt(a.likes.likes,10) - parseInt(b,10)
+      return -(parseInt(a.likes.likes,10) - parseInt(b.likes.likes,10));
     });
     var ordered = {};
     for (var index in arr) {
