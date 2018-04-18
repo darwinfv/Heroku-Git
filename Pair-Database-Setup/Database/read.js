@@ -42,7 +42,7 @@
     				master[key]["location"] = childSnapshot.val().lcoation;
     				master[key]["phone"] = childSnapshot.val().phone;
     				master[key]["endDate"] = childSnapshot.val().endDate;
-            master[key]["startDate"]  = childSnapshot.val().startDate;
+    				master[key]["startDate"] = childSnapshot.val().startDate;
     			}
     		});
     		callback(master);
@@ -156,7 +156,7 @@
 			list["phone"] = snapshot.val().phone;
 			list["banned"] = snapshot.val().ban;
 			list["endDate"] = snapshot.val().endDate;
-      list["startDate"] = snapshot.val().startDate;
+			list["startDate"] = snapshot.val().startDate;
 			list["basic"] = {};
 			snapshot.child("basic").forEach(function(childSnapshot) {
 				list["basic"][childSnapshot.key] = childSnapshot.val();
@@ -433,7 +433,10 @@
 				list[i] = childSnapshot.val();
 				i++;
 			});
-			callback(list);
+			houseRef.child(state).child(zip).child(house).once("value").then(function(babySnapshot) {
+				list["count"] = babySnapshot.val().count;
+				callback(list);
+			});
 		});
 	}
 
@@ -444,7 +447,7 @@
 	}
 
 	function getSavedHouses(groupChatRoomRef, houseRef, name, callback) {
-    var list = {};
+		var list = {};
 		//orderByChild("likes")
 		groupChatRoomRef.child(name).child("listOfHouses").once("value").then(function(snapshot) {
 			list = snapshot.val();
