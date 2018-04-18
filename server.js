@@ -1310,7 +1310,7 @@ app.post('/REMOVE-FROM-CHAT', function (req, res) {
   {
     update.removeFromChat(correctRef, internRef, name, uid);
     read.getIntern(internRef, uid, (x) => {
-      create.addNotification(correctRef, internRef, name, x.firstName + " " + x.lastName + " has left " + name + " chat.", uid);
+      create.addNotification(correctRef, internRef, name, x.firstName + " " + x.lastName + " has left " + name.substring(1) + " chat.", uid);
     })
 
     res.json({
