@@ -627,7 +627,8 @@ app.post('/CREATE-INTERN', function (req, res) {
   var location = req.body.location;
   var company = req.body.company;
   var endDate = req.body.endDate;
-  create.createIntern(internRef, uid, req.body.username, company, endDate, location);
+  var startDate = req.body.startDate;
+  create.createIntern(internRef, uid, req.body.username, company, endDate, startDate, location);
   create.createBasicPreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined", "undefined", "undefined");
   create.createRoommatePreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined", "undefined");
   create.createHousingPreferences(internRef, uid, "undefined", "undefined", "undefined", "undefined");
@@ -1309,7 +1310,7 @@ app.post('/REMOVE-FROM-CHAT', function (req, res) {
   {
     update.removeFromChat(correctRef, internRef, name, uid);
     read.getIntern(internRef, uid, (x) => {
-      create.addNotification(correctRef, internRef, x.firstName + " " + x.lastName + " has left " + name + " chat.");
+      create.addNotification(correctRef, internRef, name, x.firstName + " " + x.lastName + " has left " + name.substring(1) + " chat.", uid);
     })
 
     res.json({
@@ -1849,7 +1850,8 @@ app.post('/REMOVE-HOUSE', function (req, res) {
   console.log(req.body);
   var house = req.body.house;
   var name = req.body.name;
-  update.removeHouse(groupChatRoomRef, houseRef, name, house);
+  var uid = req.body.userID;
+  update.removeHouse(groupChatRoomRef, houseRef, internRef, name, uid, house);
   res.json({
     "status": true
   })
@@ -1871,7 +1873,25 @@ app.post('/GET-SAVED-HOUSES', function (req, res) {
   console.log(req.body);
   var name = req.body.name;
   read.getSavedHouses(groupChatRoomRef, houseRef, name, (x) => {
-    res.send(x);
+    // res.send(x);
+    var arr = [];
+    var i = 0;
+    for (var addr in x) {
+      arr[i] = x[addr];
+      arr[i]["addressTemp"] = addr;
+      i = i + 1;
+    }
+    arr.sort( function (a, b) {
+      return -(parseInt(a.likes.likes,10) - parseInt(b.likes.likes,10));
+    });
+    var ordered = {};
+    for (var index in arr) {
+      ordered[arr[index]["addressTemp"]] = {};
+      for (var attr in arr[index]) {
+        ordered[arr[index]["addressTemp"]][attr] = arr[index][attr];
+      }
+    }
+    res.send(ordered)
   });
 })
 
@@ -1879,9 +1899,9 @@ app.post('/GET-SAVED-HOUSES', function (req, res) {
 app.post('/BLOCK-USER', function (req, res) {
   console.log('Request recieved for blocking an intern');
   console.log(req.body);
-  create.blockUser(internRef, blocker, blocking);
   var blocker = req.body.blocker;
   var blocking = req.body.blocking;
+  create.blockUser(internRef, blocker, blocking);
   res.json({
     "status": true
   });

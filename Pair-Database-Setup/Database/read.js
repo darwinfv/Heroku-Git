@@ -42,6 +42,7 @@
     				master[key]["location"] = childSnapshot.val().lcoation;
     				master[key]["phone"] = childSnapshot.val().phone;
     				master[key]["endDate"] = childSnapshot.val().endDate;
+    				master[key]["startDate"] = childSnapshot.val().startDate;
     			}
     		});
     		callback(master);
@@ -155,6 +156,7 @@
 			list["phone"] = snapshot.val().phone;
 			list["banned"] = snapshot.val().ban;
 			list["endDate"] = snapshot.val().endDate;
+			list["startDate"] = snapshot.val().startDate;
 			list["basic"] = {};
 			snapshot.child("basic").forEach(function(childSnapshot) {
 				list["basic"][childSnapshot.key] = childSnapshot.val();
@@ -431,7 +433,10 @@
 				list[i] = childSnapshot.val();
 				i++;
 			});
-			callback(list);
+			houseRef.child(state).child(zip).child(house).once("value").then(function(babySnapshot) {
+				list["count"] = babySnapshot.val().count;
+				callback(list);
+			});
 		});
 	}
 
@@ -448,7 +453,7 @@
 			list = snapshot.val();
 			var size = Object.keys(list).length;
 			var i = 0;
-			for (var key in list) {
+			Object.keys(list).forEach(function(key) {
 			    if (list.hasOwnProperty(key)) {
 		    		var split = key.split(" ");
 			    	var state = split[split.length - 2];
@@ -462,7 +467,7 @@
 							callback(list);
 					});
 			    }
-			}
+			});
 		});
 	}
 

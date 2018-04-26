@@ -22,6 +22,7 @@
   }
 
   var update = require('./update.js');
+  var create = require('./create.js');
 
   function getSnapshot(relevantRef, childName, itemName, newValue) {
     var ref = relevantRef.child(childName).child(itemName);
@@ -115,8 +116,8 @@
               rooms.push(childSnapshot.val());
           });
           internRef.child(ID).remove();
-          var ref;
           rooms.forEach(function(entry) {
+              let ref;
               if(entry[0] == 1)
                   ref = chatRoomRef.child("Company");
               else if(entry[0] == 2)
@@ -176,9 +177,9 @@
               }
           });
       });
-      internRef.child(ID).once("value").then(function(snapshot) {
+      /*internRef.child(ID).once("value").then(function(snapshot) {
           addNotification(groupChatRoomRef, internRef, name, snapshot.val().firstName + " " + snapshot.val().lastName + " has left " + name.substringg(1), ID);
-      });
+      });*/
   }
 
   function banIntern(internRef, ID) {
@@ -274,7 +275,7 @@
       chatRoomRef.child(name).child("listOfInvites").update({
           [ID]: true
       });
-      // create.addNotification(chatRoomRef, )
+      // /*create.addNotification(chatRoomRef, )
   }
 
   function acceptCompany(adminRef, companyRef, name) {
